@@ -53,7 +53,7 @@ func init() {
 	viper.AddConfigPath("$HOME")
 }
 
-func Auth(sshUser *SSHUser) error {
+func CreateOrChooseSSHUser(sshUser *SSHUser) error {
 	err := viper.ReadInConfig()
 	if err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {

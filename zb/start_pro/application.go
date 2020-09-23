@@ -18,7 +18,7 @@ func main() {
 		Long:       "sync the resource from test environment and module, you can choose the synchronize the specified file",
 		Example:    "szr",
 		PreRun: func(cmd *cobra.Command, args []string) {
-			auth.Auth(&sshUser)
+			auth.CreateOrChooseSSHUser(&sshUser)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			logger.Error("RUN......")
