@@ -19,7 +19,6 @@ func main() {
 		Example:    "szr",
 		PreRun: func(cmd *cobra.Command, args []string) {
 			auth.Auth(&sshUser)
-			logger.Debug("PreRun -> SSHUser: %+v", sshUser)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			logger.Error("RUN......")

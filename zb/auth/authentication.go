@@ -1,12 +1,10 @@
 package auth
 
 import (
-	"fmt"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/whimthen/kits/logger"
 	"net"
 	"os"
 	"path/filepath"
@@ -19,32 +17,28 @@ const (
 	usersKey   = "users"
 )
 
-var (
-	qs = []*survey.Question{
-		{
-			Name:     "Host",
-			Prompt:   &survey.Input{Message: "What is server ssh host?"},
-			Validate: survey.Required,
-		},
-		{
-			Name:     "Port",
-			Prompt:   &survey.Input{Message: "What is server ssh port?"},
-			Validate: survey.Required,
-		},
-		{
-			Name:     "User",
-			Prompt:   &survey.Input{Message: "What is username?"},
-			Validate: survey.Required,
-		},
-		{
-			Name:     "Password",
-			Prompt:   &survey.Password{Message: "What is the password of this user?"},
-			Validate: survey.Required,
-		},
-	}
-
-	red = color.New(color.FgHiRed)
-)
+var qs = []*survey.Question{
+	{
+		Name:     "Host",
+		Prompt:   &survey.Input{Message: "What is server ssh host?"},
+		Validate: survey.Required,
+	},
+	{
+		Name:     "Port",
+		Prompt:   &survey.Input{Message: "What is server ssh port?"},
+		Validate: survey.Required,
+	},
+	{
+		Name:     "User",
+		Prompt:   &survey.Input{Message: "What is username?"},
+		Validate: survey.Required,
+	},
+	{
+		Name:     "Password",
+		Prompt:   &survey.Password{Message: "What is the password of this user?"},
+		Validate: survey.Required,
+	},
+}
 
 type SSHUser struct {
 	Host     string
@@ -59,17 +53,17 @@ func init() {
 	viper.AddConfigPath("$HOME")
 }
 
-func Auth(sshUser *SSHUser) {
+func Auth(sshUser *SSHUser) error {
 	err := viper.ReadInConfig()
 	if err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			dir, _ := os.UserHomeDir()
 			err := viper.WriteConfigAs(filepath.Join(dir, configName+"."+configType))
 			if err != nil {
-				panic(fmt.Errorf("Fatal error config file: %s \n", err))
+				return err
 			}
 		} else {
-			// Config file was found but another error was produced
+			return err
 		}
 	}
 
@@ -86,8 +80,7 @@ func Auth(sshUser *SSHUser) {
 
 			err := survey.Ask(qs, &answers)
 			if err != nil {
-				_, _ = red.Println(err)
-				return
+				return err
 			}
 
 			users["0"] = map[string]string{
@@ -99,10 +92,9 @@ func Auth(sshUser *SSHUser) {
 			viper.Set(usersKey, users)
 			err = viper.WriteConfig()
 			if err != nil {
-				_, _ = red.Println(err)
-				return
+				return err
 			}
-			sshUser = &answers
+			*sshUser = answers
 		}
 	} else {
 		selectedUser := ""
@@ -121,29 +113,29 @@ func Auth(sshUser *SSHUser) {
 		}
 		err := survey.AskOne(prompt, &selectedUser)
 		if err != nil {
-			_, _ = red.Println(err)
+			return err
 		}
 
 		msg := strings.Split(selectedUser, separator)
 		h, p, err := net.SplitHostPort(msg[0])
 		if err != nil {
-			_, _ = red.Println(err)
+			return err
 		}
 
 		for _, su := range users {
 			m := su.(map[string]interface{})
 			if h == m["host"].(string) && p == m["port"].(string) && msg[1] == m["username"].(string) {
-				sshUser = &SSHUser{
+				*sshUser = SSHUser{
 					Host:     h,
 					Port:     p,
 					User:     msg[1],
 					Password: m["password"].(string),
 				}
-				logger.Debug("Auth -> SSHUser: %+v", sshUser)
-				return
+				return nil
 			}
 		}
 	}
+	return nil
 }
 
 func AddUser() *cobra.Command {
