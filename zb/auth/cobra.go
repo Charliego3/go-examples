@@ -16,21 +16,21 @@ func (c *Cobra) CreateOrChooseSSHUser(sshUser *SSHUser) func(cmd *cobra.Command,
 	}
 }
 
-func (c *Cobra) AddUser() (*Command, error) {
-	return nil, nil
-}
-
-func (c *Cobra) AddUserForCobra() *cobra.Command {
+func (c *Cobra) AddUserCmd(f func(su *SSHUser) error) *cobra.Command {
 	su := SSHUser{}
 	au := &cobra.Command{
 		Use: "add",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			err, choose := AddUser(&su)
 			if err != nil {
 				logger.Error("Create new user fail: %s", err)
 			}
 
-			logger.Debug("Cobra Add User: %+v, Choose: %v", su,choose)
+			if choose {
+				logger.Debug("Cobra Add User: %+v, Choose: %v", su, choose)
+				return f(&su)
+			}
+			return nil
 		},
 	}
 
@@ -39,5 +39,15 @@ func (c *Cobra) AddUserForCobra() *cobra.Command {
 	au.Flags().StringVarP(&su.Username, "user", "u", "", "The ssh server user")
 	au.Flags().StringVarP(&su.Password, "password", "P", "", "The server password")
 
+	return au
+}
+
+func (c *Cobra) ListUserCmd() *cobra.Command {
+	au := &cobra.Command{
+		Use: "list",
+		Run: func(cmd *cobra.Command, args []string) {
+
+		},
+	}
 	return au
 }

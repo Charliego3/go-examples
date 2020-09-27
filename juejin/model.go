@@ -74,7 +74,7 @@ func (q *QueryBase) GetListSection(id string) *ListSection {
 	//req := request.HttpRequest{
 	//	Url: "https://xiaoce-cache-api-ms.juejin.im/v1/getListSection",
 	//}
-	//req.JsonContentType().AddHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15")
+	//req.JsonContentType().AddHeader("Username-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15")
 	//resp, err := req.AddHeader("Referer", "https://juejin.im/book/5bffcbc9f265da614b11b731/section/5c0374a06fb9a049d37ed783").DoGet(values).ResponseBytes()
 	if err != nil {
 		logger.Error("Request ListSection Error: %+v", err)
@@ -97,7 +97,7 @@ func (q *QueryBase) GetSection(sectionId string) *Content {
 		"Referer":      "https://juejin.im/book/5bffcbc9f265da614b11b731/section/5c0374a06fb9a049d37ed783",
 		"Content-Type": "application/json;charset=utf8",
 	}).ResponseBytes()
-	//req.JsonContentType().AddHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15")
+	//req.JsonContentType().AddHeader("Username-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15")
 	//resp, err := req.AddHeader("Referer", fmt.Sprintf("https://juejin.im/book/5bffcbc9f265da614b11b731/section/%s", sectionId)).DoGet(values).ResponseBytes()
 	if err != nil {
 		logger.Error("Request Section Error: %+v", err)

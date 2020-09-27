@@ -47,14 +47,6 @@ var (
 		Validate: survey.Required,
 	}
 
-	qs = []*survey.Question{
-		hostQuestion,
-		portQuestion,
-		userQuestion,
-		passwordQuestion,
-	}
-
-
 	bred = color.New(color.FgRed, color.Bold)
 	prompt = color.New(color.FgBlue, color.Bold).Sprint("\n==>")
 )
@@ -102,7 +94,12 @@ func CreateOrChooseSSHUser(su *SSHUser) error {
 
 		if createUser {
 			answers := SSHUser{}
-
+			qs := []*survey.Question{
+				hostQuestion,
+				portQuestion,
+				userQuestion,
+				passwordQuestion,
+			}
 			err := survey.Ask(qs, &answers)
 			if err != nil {
 				return err
