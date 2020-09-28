@@ -136,7 +136,7 @@ func selectUser(users map[string]interface{}, su *SSHUser) error {
 		userNames = append(userNames, name)
 	}
 	prompt := &survey.Select{
-		Message: "Choose a user:",
+		Message: "Choose a jump server ssh user 👤:",
 		Options: userNames,
 	}
 	err := survey.AskOne(prompt, &selectedUser)
