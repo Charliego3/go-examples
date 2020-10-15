@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -13,7 +14,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"sync"
 )
 
 type Sync struct {
@@ -23,6 +23,7 @@ type Sync struct {
 	stdout  io.Reader
 	output  bytes.Buffer
 	read    int
+	prompt  string
 }
 
 var (
@@ -85,8 +86,24 @@ func (s *Sync) close() {
 }
 
 func (s *Sync) exec(cmd string) (string, error) {
+	return s.getStdout(cmd, "")
+}
+
+func (s *Sync) getPrompt(servers map[string]string, ip string) (string, error) {
+	return s.getStdout(servers[ip], ip)
+}
+
+func (s *Sync) getStdout(cmd, ip string) (string, error) {
 	if s.session == nil {
 		return "", errors.New("please connect first")
+	}
+
+	if strings.HasPrefix(cmd, "cd") {
+		tempPrompt := strings.ReplaceAll(cmd, "cd ", "")
+		if strings.HasPrefix(s.prompt[1:], "/") {
+			tempPrompt = s.prompt[1:len(s.prompt)-1] + "/" + tempPrompt
+		}
+		s.prompt = ":" + tempPrompt + "$"
 	}
 
 	_, err := s.stdin.Write([]byte(cmd + "\r"))
@@ -94,160 +111,38 @@ func (s *Sync) exec(cmd string) (string, error) {
 		return "", err
 	}
 
-	//time.Sleep(time.Millisecond * 500)
-	//rtn := s.output.String()[s.read+len(cmd)+2:]
-	//s.read = s.output.Len()
-
-
-	//_, err = s.stdin.Write([]byte("\r"))
-	//time.Sleep(time.Millisecond * 500)
-	//var bs []byte
-	//read, err := s.stdout.Read(bs)
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-	//
-	//log.Println("Read:", read)
-	//
-	//end := string(colorMatch.ReplaceAll([]byte(s.cd("")), []byte("")))
-	//c := make(chan string)
-	//
-	//go func() {
-	//	var (
-	//		buf [65 * 1024]byte
-	//		t   int
-	//	)
-	//	waitingString := ""
-	//	for {
-	//		n, err := s.stdout.Read(buf[t:]) //this reads the ssh terminal
-	//		if err != nil && err != io.EOF{
-	//			fmt.Println(err)
-	//			break
-	//		}
-	//		if err == io.EOF || n == 0 {
-	//			c <- string(buf[:t])
-	//			t = 0
-	//			break
-	//		}
-	//		t += n
-	//		waitingString += string(buf[:n])
-	//	}
-	//
-	//	//for {
-	//	//	//buf := make([]byte, 1000)
-	//	//
-	//	//	n, err := stdout.Read(buf[t:])
-	//	//	if err != nil {
-	//	//		fmt.Println(err.Error())
-	//	//		close(c)
-	//	//		return
-	//	//	}
-	//	//	t += n
-	//	//	result := string(buf[:t])
-	//	//	if strings.HasSuffix(result, end) {
-	//	//		c <- string(buf[:t])
-	//	//		t = 0
-	//	//	}
-	//	//}
-	//}()
-	//
-	//str := <-c
-	//log.Println(str)
-
-	//var (
-	//	buf [65 * 1024]byte
-	//	t   int
-	//)
-	//waitingString := ""
-	//for {
-	//	n, err := s.stdout.Read(buf[t:]) //this reads the ssh terminal
-	//	if err != nil && err != io.EOF{
-	//		fmt.Println(err)
-	//		break
-	//	}
-	//	if err == io.EOF {
-	//		//c <- string(buf[:t])
-	//		t = 0
-	//		break
-	//	}
-	//	t += n
-	//	waitingString += string(buf[:n])
-	//	if n < t {
-	//		break
-	//	}
-	//}
-
-	//buf := make([]byte, 1000)
-	//n, err := s.stdout.Read(buf) //this reads the ssh terminal
-	//waitingString := ""
-	//if err == nil {
-	//	println(fmt.Sprintf("%s", buf[:n]))
-	//	waitingString = string(buf[:n])
-	//}
-	//for err == nil {
-	//	// this loop will not end!!
-	//	n, err = s.stdout.Read(buf)
-	//	waitingString += string(buf[:n])
-	//	println(fmt.Sprintf("%s", buf[:n]))
-	//	if err != nil {
-	//		fmt.Println(err)
-	//	}
-	//}
-
-	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, s.stdout); err != nil {
-		log.Fatalf("reading failed: %s", err)
-	}
-
-	log.Println(buf.String())
-
-	return buf.String(), nil
-}
-
-func (s *Sync) getStdout(cmd, end string) (string, error) {
-	if s.session == nil {
-		return "", errors.New("please connect first")
-	}
-	out := make(chan string, 5)
-	var wg sync.WaitGroup
-	wg.Add(1) //for the shell itself
-	go func() {
-		wg.Add(1)
-		_, err := s.stdin.Write([]byte(cmd + "\n"))
+	waitingString := ""
+	for {
+		var buf [65 * 1024]byte
+		n, err := s.stdout.Read(buf[:])
 		if err != nil {
-			//return "", err
-			log.Panic(err)
+			fmt.Println(err)
+			break
 		}
-		wg.Wait()
-	}()
-
-	go func() {
-		var (
-			buf [65 * 1024]byte
-			t   int
-		)
-		stdout, err := s.session.StdoutPipe()
-		if err != nil {
-			log.Panic(err)
-		}
-		for {
-			n, err := stdout.Read(buf[t:])
-			if err != nil {
-				fmt.Println(err.Error())
-				close(out)
-				return
-			}
-			t += n
-			result := string(buf[:t])
-			if strings.HasSuffix(result, end) {
-				out <- string(buf[:t])
-				t = 0
-				wg.Done()
+		waitingString += string(buf[:n])
+		line := string(colorMatch.ReplaceAll([]byte(waitingString), []byte("")))
+		if ip != "" && s.prompt == "" {
+			if strings.HasSuffix(strings.TrimSpace(line), ":~$") {
+				reader := bufio.NewReader(bytes.NewBufferString(line))
+				var line []byte
+				for {
+					lineBytes, _, err := reader.ReadLine()
+					if err == io.EOF {
+						break
+					}
+					line = lineBytes
+				}
+				s.prompt = string(line)
+				return s.prompt, nil
 			}
 		}
-	}()
-
-	return <-out, nil
+		//time.Sleep(time.Millisecond * 50)
+		line = strings.TrimSpace(line)
+		if (strings.Count(line, "Opt>") == 3) || (s.prompt != "" && strings.HasSuffix(line, s.prompt)) {
+			break
+		}
+	}
+	return waitingString, nil
 }
 
 func (s *Sync) dashboard() ([]string, map[string]string) {
@@ -345,7 +240,8 @@ func (s *Sync) getConfigs() []string {
 }
 
 func (s *Sync) getContent(fn string, confDir string) (string, error) {
-	content, err := s.exec("cat " + fn)
+	cmd := "cat " + fn
+	content, err := s.exec(cmd)
 	//content, err := s.getStdout("cat "+fn, confDir)
 	if err != nil {
 		return "", err
@@ -355,5 +251,6 @@ func (s *Sync) getContent(fn string, confDir string) (string, error) {
 	if lastIndex <= 0 {
 		lastIndex = len(content)
 	}
-	return content[:lastIndex], nil
+	content = strings.ReplaceAll(content[len(cmd):lastIndex], "\r\n", "\n")
+	return content[1:], nil
 }

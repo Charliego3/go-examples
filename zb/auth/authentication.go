@@ -47,7 +47,7 @@ var (
 		Validate: survey.Required,
 	}
 
-	bred = color.New(color.FgRed, color.Bold)
+	bred   = color.New(color.FgRed, color.Bold)
 	prompt = color.New(color.FgBlue, color.Bold).Sprint("\n==>")
 )
 
@@ -136,7 +136,7 @@ func selectUser(users map[string]interface{}, su *SSHUser) error {
 		userNames = append(userNames, name)
 	}
 	prompt := &survey.Select{
-		Message: "Choose a jump server ssh user 👤:",
+		Message: "Choose a jump server ssh user:",
 		Options: userNames,
 	}
 	err := survey.AskOne(prompt, &selectedUser)

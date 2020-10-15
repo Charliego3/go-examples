@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/whimthen/kits/logger"
@@ -14,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 var sshUser auth.SSHUser
@@ -40,6 +42,8 @@ func main() {
 }
 
 func run(cmd *cobra.Command, args []string) {
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	s.Start()
 	sync := &Sync{}
 	err := sync.connect(sshUser)
 	if err != nil {
@@ -53,46 +57,70 @@ func run(cmd *cobra.Command, args []string) {
 
 	dashboards, servers := sync.dashboard()
 
-	if dashboards != nil && len(dashboards) > 0 {
-		prompt := &survey.Select{
-			Message: "Select a jump server node 🗂:",
-			Options: dashboards,
+	s.Stop()
+
+	if len(dashboards) == 0 {
+		color.Red("\n\tNo servers from %s", sshUser.Username)
+		return
+	}
+
+	prompt := &survey.Select{
+		Message: "Select a jump server node:",
+		Options: dashboards,
+	}
+
+	var r string
+	_ = survey.AskOne(prompt, &r)
+
+	s.Restart()
+	_, _ = sync.getPrompt(servers, r)
+	sync.cd("cd /home/appl")
+	modules := sync.getModules()
+	s.Stop()
+
+	if len(modules) == 0 {
+		color.Red("\n\tNo modules from %s", servers[r])
+		return
+	}
+
+	prompt = &survey.Select{
+		Message: "Select a module for sync:",
+		Options: modules,
+	}
+
+	_ = survey.AskOne(prompt, &r)
+
+	s.Restart()
+	sync.cd("cd " + r)
+	confDir := string(colorMatch.ReplaceAll([]byte(sync.cd("cd conf")), []byte("")))
+	configs := sync.getConfigs()
+	s.Stop()
+	if len(configs) > 0 {
+		prompt := &survey.MultiSelect{
+			Message: "Select files sync to current dir:",
+			Options: configs,
 		}
 
-		var r string
-		_ = survey.AskOne(prompt, &r)
+		var configFiles []string
+		_ = survey.AskOne(prompt, &configFiles)
 
-		sync.cd(servers[r])
-		sync.cd("cd /home/appl")
-		modules := sync.getModules()
+		doSync(sync, configFiles, servers[r], confDir)
 
-		prompt = &survey.Select{
-			Message: "Select a module for sync 🧩:",
-			Options: modules,
+		isConfigurationNginx := false
+		nginxPrompt := &survey.Confirm{
+			Message: "Do you want to configure nginx to access the page?",
 		}
+		_ = survey.AskOne(nginxPrompt, &isConfigurationNginx)
 
-		_ = survey.AskOne(prompt, &r)
-
-		sync.cd("cd " + r)
-		confDir := string(colorMatch.ReplaceAll([]byte(sync.cd("cd conf")), []byte("")))
-		configs := sync.getConfigs()
-		if len(configs) > 0 {
-			prompt := &survey.MultiSelect{
-				Message: "Select files sync to current dir 📜:",
-				Options: configs,
-			}
-
-			var configFiles []string
-			_ = survey.AskOne(prompt, &configFiles)
-
-			syncing(sync, configFiles, servers[r], confDir)
+		if isConfigurationNginx {
+			CompleteNginx()
 		}
 	}
 
 	sync.close()
 }
 
-func syncing(s *Sync, configs []string, ip string, confDir string) {
+func doSync(s *Sync, configs []string, ip string, confDir string) {
 	if len(configs) <= 0 {
 		color.Red("\n\t🤒🤒You have not choose files to sync!!!\n\n")
 		return
@@ -100,7 +128,7 @@ func syncing(s *Sync, configs []string, ip string, confDir string) {
 
 	// zip local files
 	prompt := &survey.Confirm{
-		Message: "Do you want to pack local files back up 📦?",
+		Message: "Do you want to pack local files back up?",
 		Help:    "Pack the local configuration file and place it in the `resources` directory",
 		Default: true,
 	}
@@ -108,12 +136,11 @@ func syncing(s *Sync, configs []string, ip string, confDir string) {
 	isZip := false
 	_ = survey.AskOne(prompt, &isZip)
 
-	log.Println("是否打包", isZip)
 	path := filepath.Join("./src", "main", "resources")
 
 	isGoing := true
 	if isZip {
-		err := tarit(path)
+		err := packageFiles(path)
 		if err != nil {
 			prompt := &survey.Confirm{
 				Message: "压缩tar包失败,是否继续?",
@@ -121,6 +148,8 @@ func syncing(s *Sync, configs []string, ip string, confDir string) {
 				Help:    "Reason: " + err.Error(),
 			}
 			_ = survey.AskOne(prompt, &isGoing)
+		} else {
+			color.Green("🍺 Compress old files to %s", filepath.Join(path, "resources.tar.gz"))
 		}
 	}
 
@@ -136,10 +165,10 @@ func syncing(s *Sync, configs []string, ip string, confDir string) {
 			continue
 		}
 
-		log.Printf("File: %s, Content: %s", config, content)
 		content = strings.ReplaceAll(content, ip, "")
 		content = strings.ReplaceAll(content, "\r\n\r\n", "\r\n")
 		f := filepath.Join(path, config)
+		color.Green("🍺 %s file is synced", f)
 		err = ioutil.WriteFile(f, []byte(content), 0644)
 		if err != nil {
 			color.Red("\t❗️❗️❗️File: %s write error: %s", config, err)
@@ -147,7 +176,7 @@ func syncing(s *Sync, configs []string, ip string, confDir string) {
 	}
 }
 
-func tarit(path string) error {
+func packageFiles(path string) error {
 	// 创建文件
 	zfn := "resources.tar.gz"
 	fw, err := os.Create(filepath.Join(path, zfn))
@@ -156,21 +185,13 @@ func tarit(path string) error {
 	}
 	defer fw.Close()
 
-	// 将 tar 包使用 gzip 压缩，其实添加压缩功能很简单，
-	// 只需要在 fw 和 tw 之前加上一层压缩就行了，和 Linux 的管道的感觉类似
 	gw := gzip.NewWriter(fw)
 	defer gw.Close()
 
 	// 创建 Tar.Writer 结构
 	tw := tar.NewWriter(gw)
-	// 如果需要启用 gzip 将上面代码注释，换成下面的
-
 	defer tw.Close()
 
-	// 下面就该开始处理数据了，这里的思路就是递归处理目录及目录下的所有文件和目录
-	// 这里可以自己写个递归来处理，不过 Golang 提供了 filepath.Walk 函数，可以很方便的做这个事情
-	// 直接将这个函数的处理结果返回就行，需要传给它一个源文件或目录，它就可以自己去处理
-	// 我们就只需要去实现我们自己的 打包逻辑即可，不需要再去路径相关的事情
 	err = filepath.Walk(path, func(fileName string, fi os.FileInfo, err error) error {
 		// 因为这个闭包会返回个 error ，所以先要处理一下这个
 		if err != nil {
@@ -202,12 +223,6 @@ func tarit(path string) error {
 		if err != nil {
 			return err
 		}
-		// 这里需要处理下 hdr 中的 Name，因为默认文件的名字是不带路径的，
-		// 打包之后所有文件就会堆在一起，这样就破坏了原本的目录结果
-		// 例如： 将原本 hdr.Name 的 syslog 替换程 log/syslog
-		// 这个其实也很简单，回调函数的 fileName 字段给我们返回来的就是完整路径的 log/syslog
-		// strings.TrimPrefix 将 fileName 的最左侧的 / 去掉，
-		// 熟悉 Linux 的都知道为什么要去掉这个
 		hdr.Name = strings.TrimPrefix(fileName, path)
 
 		// 写入文件信息
@@ -234,7 +249,6 @@ func tarit(path string) error {
 			return err
 		}
 
-		// 记录下过程，这个可以不记录，这个看需要，这样可以看到打包的过程
 		return nil
 	})
 

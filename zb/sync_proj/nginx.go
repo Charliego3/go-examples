@@ -12,14 +12,11 @@ func CompleteNginx() {
 	if err != nil {
 		isInstall := false
 		prompt := &survey.Confirm{
-			Message: "",
+			Message: "Do you want to install nginx for start project?",
 		}
-		err := survey.AskOne(prompt, &isInstall)
-		if err != nil {
-
-		}
+		_ = survey.AskOne(prompt, &isInstall)
 	}
-	cmd := exec.Command("bash", "-c", "sudo " + path)
+	cmd := exec.Command("bash", "-c", "sudo "+path)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
@@ -34,7 +31,7 @@ func CompleteNginx() {
 }
 
 func checkNginxInstall() (path string, err error) {
-	return checkInstall("nginx")
+	return checkInstall("nginxs")
 }
 
 func checkBrewInstall() (path string, err error) {
