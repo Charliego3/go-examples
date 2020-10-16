@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-var sshUser auth.SSHUser
+var sshUser *auth.SSHUser
 
 func main() {
 	var cobraAuth auth.Cobra
@@ -29,7 +29,7 @@ func main() {
 		Short:      "sync the resource from test environment and module",
 		Long:       "sync the resource from test environment and module, you can choose the synchronize the specified file",
 		Example:    "szr",
-		PreRun:     cobraAuth.CreateOrChooseSSHUser(&sshUser),
+		PreRun:     cobraAuth.CreateOrChooseSSHUser(sshUser),
 		Run:        run,
 	}
 
@@ -41,10 +41,13 @@ func main() {
 }
 
 func run(cmd *cobra.Command, args []string) {
+	if sshUser == nil {
+		return
+	}
 	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 	s.Start()
 	sync := &Sync{}
-	err := sync.connect(sshUser)
+	err := sync.connect(*sshUser)
 	if err != nil {
 		color.Red(err.Error())
 		return
