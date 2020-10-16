@@ -1,17 +1,19 @@
 package auth
 
 import (
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/whimthen/kits/logger"
+	"os"
 )
 
-type Cobra struct {}
+type Cobra struct{}
 
 func (c *Cobra) CreateOrChooseSSHUser(sshUser *SSHUser) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		err := CreateOrChooseSSHUser(sshUser)
 		if err != nil {
-			logger.Fatal("Create or choose ssh user error: %s", err)
+			color.Red("Create or choose ssh user error: %s", err)
+			os.Exit(128)
 		}
 	}
 }
@@ -23,11 +25,11 @@ func (c *Cobra) AddUserCmd(f func(su *SSHUser) error) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err, choose := AddUser(&su)
 			if err != nil {
-				logger.Error("Create new user fail: %s", err)
+				color.Red("🌡 %+v", err)
+				return err
 			}
 
 			if choose {
-				logger.Debug("Cobra Add User: %+v, Choose: %v", su, choose)
 				return f(&su)
 			}
 			return nil
@@ -46,7 +48,10 @@ func (c *Cobra) ListUserCmd() *cobra.Command {
 	au := &cobra.Command{
 		Use: "list",
 		Run: func(cmd *cobra.Command, args []string) {
-
+			userNames := getUserNames()
+			for i, username := range userNames {
+				color.Green("%d. %s", i+1, username)
+			}
 		},
 	}
 	return au

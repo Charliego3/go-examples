@@ -16,10 +16,11 @@ const (
 	configType = "json"
 	usersKey   = "users"
 
-	host     = "host"
-	port     = "port"
-	username = "username"
-	password = "password"
+	host              = "host"
+	port              = "port"
+	username          = "username"
+	password          = "password"
+	usernameSeparator = " - "
 )
 
 var (
@@ -119,32 +120,40 @@ func CreateOrChooseSSHUser(su *SSHUser) error {
 			*su = answers
 		}
 	} else {
-		_ = selectUser(users, su)
+		_ = selectUser(su)
 	}
 	return nil
 }
 
-func selectUser(users map[string]interface{}, su *SSHUser) error {
-	selectedUser := ""
-	separator := " - "
+func getUserNames() []string {
+	if err := initConfig(); err != nil {
+		color.Red("🌡 %+v", err)
+		return nil
+	}
+	users := viper.GetStringMap(usersKey)
 	var userNames []string
 	for _, u := range users {
 		m := u.(map[string]interface{})
 		name := net.JoinHostPort(m[host].(string), m[port].(string))
-		name += separator
+		name += usernameSeparator
 		name += m[username].(string)
 		userNames = append(userNames, name)
 	}
+	return userNames
+}
+
+func selectUser(su *SSHUser) error {
+	selectedUser := ""
 	prompt := &survey.Select{
 		Message: "Choose a jump server ssh user:",
-		Options: userNames,
+		Options: getUserNames(),
 	}
 	err := survey.AskOne(prompt, &selectedUser)
 	if err != nil {
 		return err
 	}
 
-	msg := strings.Split(selectedUser, separator)
+	msg := strings.Split(selectedUser, usernameSeparator)
 	h, p, err := net.SplitHostPort(msg[0])
 	if err != nil {
 		return err
@@ -210,7 +219,7 @@ func AddUser(su *SSHUser) (err error, choose bool) {
 				return err
 			}
 			if connect {
-				_ = selectUser(users, su)
+				_ = selectUser(su)
 				choose = true
 			}
 		}

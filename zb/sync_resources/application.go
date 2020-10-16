@@ -7,12 +7,11 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/whimthen/kits/logger"
 	"github.com/whimthen/temp/zb/auth"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -34,10 +33,10 @@ func main() {
 		Run:        run,
 	}
 
-	root.AddCommand(cobraAuth.AddUserCmd(addUserFunc))
+	root.AddCommand(cobraAuth.AddUserCmd(addUserFunc), cobraAuth.ListUserCmd())
 
 	if err := root.Execute(); err != nil {
-		logger.Fatal("%+v", err)
+		color.Red("🌡 %+v", err)
 	}
 }
 
@@ -47,12 +46,15 @@ func run(cmd *cobra.Command, args []string) {
 	sync := &Sync{}
 	err := sync.connect(sshUser)
 	if err != nil {
-		log.Fatal(err)
+		color.Red(err.Error())
+		return
 	}
+	defer sync.close()
 
 	err = sync.shell()
 	if err != nil {
-		log.Fatal(err)
+		color.Red(err.Error())
+		return
 	}
 
 	dashboards, servers := sync.dashboard()
@@ -69,17 +71,17 @@ func run(cmd *cobra.Command, args []string) {
 		Options: dashboards,
 	}
 
-	var r string
-	_ = survey.AskOne(prompt, &r)
+	var node string
+	_ = survey.AskOne(prompt, &node)
 
 	s.Restart()
-	_, _ = sync.getPrompt(servers, r)
+	_, _ = sync.getPrompt(servers, node)
 	sync.cd("cd /home/appl")
 	modules := sync.getModules()
 	s.Stop()
 
 	if len(modules) == 0 {
-		color.Red("\n\tNo modules from %s", servers[r])
+		color.Red("\n\tNo modules from %s", servers[node])
 		return
 	}
 
@@ -88,11 +90,12 @@ func run(cmd *cobra.Command, args []string) {
 		Options: modules,
 	}
 
+	var r string
 	_ = survey.AskOne(prompt, &r)
 
 	s.Restart()
 	sync.cd("cd " + r)
-	confDir := string(colorMatch.ReplaceAll([]byte(sync.cd("cd conf")), []byte("")))
+	sync.cd("cd conf")
 	configs := sync.getConfigs()
 	s.Stop()
 	if len(configs) > 0 {
@@ -104,7 +107,9 @@ func run(cmd *cobra.Command, args []string) {
 		var configFiles []string
 		_ = survey.AskOne(prompt, &configFiles)
 
-		doSync(sync, configFiles, servers[r], confDir)
+		if !doSync(s, sync, configFiles, servers[node]) {
+			return
+		}
 
 		isConfigurationNginx := false
 		nginxPrompt := &survey.Confirm{
@@ -113,17 +118,16 @@ func run(cmd *cobra.Command, args []string) {
 		_ = survey.AskOne(nginxPrompt, &isConfigurationNginx)
 
 		if isConfigurationNginx {
-			CompleteNginx()
+			remotePort := sync.getRemotePort(r)
+			CompleteNginx(s, sync, r, servers[node], remotePort)
 		}
 	}
-
-	sync.close()
 }
 
-func doSync(s *Sync, configs []string, ip string, confDir string) {
+func doSync(s *spinner.Spinner, sync *Sync, configs []string, ip string) bool {
 	if len(configs) <= 0 {
 		color.Red("\n\t🤒🤒You have not choose files to sync!!!\n\n")
-		return
+		return false
 	}
 
 	// zip local files
@@ -140,7 +144,7 @@ func doSync(s *Sync, configs []string, ip string, confDir string) {
 
 	isGoing := true
 	if isZip {
-		err := packageFiles(path)
+		err := packageFiles(s, path)
 		if err != nil {
 			prompt := &survey.Confirm{
 				Message: "压缩tar包失败,是否继续?",
@@ -154,13 +158,15 @@ func doSync(s *Sync, configs []string, ip string, confDir string) {
 	}
 
 	if !isGoing {
-		return
+		return false
 	}
 
 	// copy remote file change local
 	for _, config := range configs {
-		content, err := s.getContent(config, confDir)
+		s.Restart()
+		content, err := sync.getContent(config)
 		if err != nil {
+			s.Stop()
 			color.Red("Get remote content error, file: %s", config)
 			continue
 		}
@@ -168,15 +174,21 @@ func doSync(s *Sync, configs []string, ip string, confDir string) {
 		content = strings.ReplaceAll(content, ip, "")
 		content = strings.ReplaceAll(content, "\r\n\r\n", "\r\n")
 		f := filepath.Join(path, config)
-		color.Green("🍺 %s file is synced", f)
 		err = ioutil.WriteFile(f, []byte(content), 0644)
 		if err != nil {
+			s.Stop()
 			color.Red("\t❗️❗️❗️File: %s write error: %s", config, err)
+			return false
 		}
+		s.Stop()
+		color.Green("🍺 %s file is synced", f)
 	}
+	return true
 }
 
-func packageFiles(path string) error {
+func packageFiles(s *spinner.Spinner, path string) error {
+	s.Restart()
+	defer s.Stop()
 	// 创建文件
 	zfn := "resources.tar.gz"
 	fw, err := os.Create(filepath.Join(path, zfn))
@@ -251,6 +263,22 @@ func packageFiles(path string) error {
 
 		return nil
 	})
-
 	return err
+}
+
+func commandExec(cmd string) bool {
+	command := exec.Command("bash", "-c", cmd)
+	command.Stderr = os.Stderr
+	command.Stdout = os.Stdout
+	command.Stdin = os.Stdin
+	err := command.Run()
+	if err != nil {
+		pe(err)
+		return false
+	}
+	return true
+}
+
+func pe(err error) {
+	color.Red("🌡 %+v", err)
 }

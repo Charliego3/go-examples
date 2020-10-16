@@ -3,12 +3,13 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/whimthen/temp/zb/auth"
 	"golang.org/x/crypto/ssh"
 	"io"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -55,7 +56,8 @@ func (s *Sync) connect(su auth.SSHUser) error {
 	}
 	// Request pseudo terminal
 	if err := session.RequestPty(termType, 40, 200, ssh.TerminalModes{}); err != nil {
-		log.Println(err)
+		color.Red(err.Error())
+		return err
 	}
 	s.stdin, err = session.StdinPipe()
 	if err != nil {
@@ -81,12 +83,37 @@ func (s *Sync) close() {
 	}
 
 	if s.client != nil {
-		s.client.Close()
+		_ = s.client.Close()
 	}
 }
 
 func (s *Sync) exec(cmd string) (string, error) {
 	return s.getStdout(cmd, "")
+}
+
+func (s *Sync) getRemotePort(node string) string {
+	serverPath := fmt.Sprintf("/home/appl/%s/tomcat/conf/server.xml", node)
+	content, err := s.getContent(serverPath)
+	if err != nil {
+		color.Red(err.Error())
+		return "8080"
+	}
+
+	type Server struct {
+		Service struct {
+			Connector []struct {
+				Port string `xml:"port,attr"`
+			} `xml:"Connector"`
+		} `xml:"Service"`
+	}
+
+	server := &Server{}
+	_ = xml.Unmarshal([]byte(content), server)
+	if len(server.Service.Connector) < 1 {
+		return "8080"
+	}
+
+	return server.Service.Connector[0].Port
 }
 
 func (s *Sync) getPrompt(servers map[string]string, ip string) (string, error) {
@@ -136,7 +163,6 @@ func (s *Sync) getStdout(cmd, ip string) (string, error) {
 				return s.prompt, nil
 			}
 		}
-		//time.Sleep(time.Millisecond * 50)
 		line = strings.TrimSpace(line)
 		if (strings.Count(line, "Opt>") == 3) || (s.prompt != "" && strings.HasSuffix(line, s.prompt)) {
 			break
@@ -148,7 +174,8 @@ func (s *Sync) getStdout(cmd, ip string) (string, error) {
 func (s *Sync) dashboard() ([]string, map[string]string) {
 	txt, err := s.exec("")
 	if err != nil {
-		log.Fatal(err)
+		color.Red(err.Error())
+		return nil, nil
 	}
 
 	var servers []string
@@ -162,18 +189,15 @@ func (s *Sync) dashboard() ([]string, map[string]string) {
 		}
 
 		if ipValidator.MatchString(line) {
-			if err != nil {
-				log.Fatal("matchString", err)
-			}
 			space := strings.TrimSpace(line)
 			splits := strings.Split(space, "|")
 			var ls []string
-			for _, split := range splits {
-				ls = append(ls, strings.TrimSpace(split))
-			}
+			ls = append(ls, strings.TrimSpace(splits[2]))
+			ls = append(ls, strings.TrimSpace(splits[1]))
+			ls = append(ls, strings.TrimSpace(splits[3]))
 			n := strings.Join(ls, " - ")
 			servers = append(servers, n)
-			serverMap[n] = strings.TrimSpace(splits[2])
+			serverMap[n] = ls[0]
 		}
 	}
 
@@ -183,7 +207,8 @@ func (s *Sync) dashboard() ([]string, map[string]string) {
 func (s *Sync) cd(dir string) string {
 	dir, err := s.exec(dir)
 	if err != nil {
-		log.Fatal(err)
+		color.Red(err.Error())
+		return ""
 	}
 	return dir
 }
@@ -191,7 +216,8 @@ func (s *Sync) cd(dir string) string {
 func (s *Sync) ls() string {
 	rtn, err := s.exec("ls")
 	if err != nil {
-		log.Fatal(err)
+		color.Red(err.Error())
+		return ""
 	}
 	return rtn
 }
@@ -239,10 +265,9 @@ func (s *Sync) getConfigs() []string {
 	return configs
 }
 
-func (s *Sync) getContent(fn string, confDir string) (string, error) {
-	cmd := "cat " + fn
+func (s *Sync) getContent(filePath string) (string, error) {
+	cmd := "cat " + filePath
 	content, err := s.exec(cmd)
-	//content, err := s.getStdout("cat "+fn, confDir)
 	if err != nil {
 		return "", err
 	}
