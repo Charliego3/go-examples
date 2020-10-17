@@ -87,6 +87,7 @@ func run(cmd *cobra.Command, args []string) {
 	var node string
 	err = survey.AskOne(prompt, &node)
 	if err != nil {
+		spinner.Stop()
 		return
 	}
 
@@ -101,6 +102,7 @@ func run(cmd *cobra.Command, args []string) {
 	spinner.Stop()
 
 	if len(modules) == 0 {
+		spinner.Stop()
 		color.Red("🌡 No modules from %s", servers[node])
 		return
 	}
@@ -111,7 +113,11 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	var module string
-	_ = survey.AskOne(prompt, &module)
+	err = survey.AskOne(prompt, &module)
+	if err != nil {
+		spinner.Stop()
+		return
+	}
 
 	spinner.Restart()
 	sync.cd("cd " + module)
@@ -125,7 +131,11 @@ func run(cmd *cobra.Command, args []string) {
 		}
 
 		var configFiles []string
-		_ = survey.AskOne(prompt, &configFiles)
+		err = survey.AskOne(prompt, &configFiles)
+		if err != nil {
+			spinner.Stop()
+			return
+		}
 
 		if !doSync(sync, module, configFiles, servers[node]) {
 			return
@@ -135,7 +145,11 @@ func run(cmd *cobra.Command, args []string) {
 		nginxPrompt := &survey.Confirm{
 			Message: "Do you want to configure nginx to access the page?",
 		}
-		_ = survey.AskOne(nginxPrompt, &isConfigurationNginx)
+		err = survey.AskOne(nginxPrompt, &isConfigurationNginx)
+		if err != nil {
+			spinner.Stop()
+			return
+		}
 
 		if isConfigurationNginx {
 			remotePort := sync.getRemotePort(module)
@@ -158,7 +172,11 @@ func doSync(sync *Sync, module string, configs []string, ip string) bool {
 	}
 
 	isZip := false
-	_ = survey.AskOne(prompt, &isZip)
+	err := survey.AskOne(prompt, &isZip)
+	if err != nil {
+		spinner.Stop()
+		return false
+	}
 
 	path := filepath.Join("./src", "main", "resources")
 
@@ -171,7 +189,11 @@ func doSync(sync *Sync, module string, configs []string, ip string) bool {
 				Default: true,
 				Help:    "Reason: " + err.Error(),
 			}
-			_ = survey.AskOne(prompt, &isGoing)
+			err = survey.AskOne(prompt, &isGoing)
+			if err != nil {
+				spinner.Stop()
+				return false
+			}
 		} else {
 			color.Green("🍺 Compress old files to %s", filepath.Join(path, "resources.tar.gz"))
 		}

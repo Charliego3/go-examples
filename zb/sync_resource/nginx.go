@@ -31,11 +31,13 @@ const (
 
 func CompleteNginx(s *Sync, node, ip, port string) {
 	nginxPath := checkNginxInstall()
-	spinner.Restart()
-	confPath := getNginxConfigPath(nginxPath)
-	confPath = filepath.Dir(confPath)
-	configurationNginx(s, confPath, node, ip, port)
-	startNginx(confPath)
+	if nginxPath != "" {
+		spinner.Restart()
+		confPath := getNginxConfigPath(nginxPath)
+		confPath = filepath.Dir(confPath)
+		configurationNginx(s, confPath, node, ip, port)
+		startNginx(confPath)
+	}
 }
 
 func startNginx(confPath string) {
@@ -155,7 +157,11 @@ func checkNginxInstall() string {
 			Message: "Do you want to install nginx to start the project?",
 			Default: true,
 		}
-		_ = survey.AskOne(prompt, &isInstall)
+		err = survey.AskOne(prompt, &isInstall)
+		if err != nil {
+			spinner.Stop()
+			return ""
+		}
 
 		if isInstall {
 			brewPath := checkBrewInstall()
@@ -177,7 +183,11 @@ func checkBrewInstall() string {
 			Message: "Do you want to install brew to install nginx?",
 			Default: true,
 		}
-		_ = survey.AskOne(prompt, &isInstall)
+		err = survey.AskOne(prompt, &isInstall)
+		if err != nil {
+			spinner.Stop()
+			return ""
+		}
 
 		if isInstall {
 			installBrew()
