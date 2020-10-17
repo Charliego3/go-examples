@@ -4,7 +4,7 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/briandowns/spinner"
+	spinner2 "github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/whimthen/temp/zb/auth"
@@ -17,19 +17,19 @@ import (
 	"time"
 )
 
-var sshUser *auth.SSHUser
+var (
+	sshUser   *auth.SSHUser
+	cobraAuth auth.Cobra
+	spinner   *spinner2.Spinner
+)
 
 func main() {
-	var cobraAuth auth.Cobra
-
 	root := cobra.Command{
-		Use:        "sync_zb_resource",
-		Aliases:    []string{"szr"},
+		Use:        "sync_resource",
 		SuggestFor: []string{"sync", "resource", "zb"},
 		Short:      "sync the resource from test environment and module",
 		Long:       "sync the resource from test environment and module, you can choose the synchronize the specified file",
-		Example:    "szr",
-		PreRun:     cobraAuth.CreateOrChooseSSHUser(sshUser),
+		Example:    "sync_resource",
 		Run:        run,
 	}
 
@@ -41,31 +41,41 @@ func main() {
 }
 
 func run(cmd *cobra.Command, args []string) {
+	path := filepath.Join("./src", "main", "resources")
+	_, err := os.Stat(path)
+	if err != nil {
+		color.Red("🌡 %+v", "this directory is not the correct Maven structure")
+		return
+	}
+
+	sshUser = &auth.SSHUser{}
+	cobraAuth.CreateOrChooseSSHUser(sshUser)(nil, nil)
+
 	if sshUser == nil {
 		return
 	}
-	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
-	s.Start()
+	spinner = spinner2.New(spinner2.CharSets[11], 100*time.Millisecond)
+	spinner.Start()
 	sync := &Sync{}
-	err := sync.connect(*sshUser)
+	err = sync.connect(*sshUser)
 	if err != nil {
-		color.Red(err.Error())
+		pe(err)
 		return
 	}
 	defer sync.close()
 
 	err = sync.shell()
 	if err != nil {
-		color.Red(err.Error())
+		pe(err)
 		return
 	}
 
 	dashboards, servers := sync.dashboard()
 
-	s.Stop()
+	spinner.Stop()
 
 	if len(dashboards) == 0 {
-		color.Red("\n\tNo servers from %s", sshUser.Username)
+		color.Red("🌡 No servers from %s", sshUser.Username)
 		return
 	}
 
@@ -75,16 +85,23 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	var node string
-	_ = survey.AskOne(prompt, &node)
+	err = survey.AskOne(prompt, &node)
+	if err != nil {
+		return
+	}
 
-	s.Restart()
-	_, _ = sync.getPrompt(servers, node)
+	spinner.Restart()
+	_, err = sync.getPrompt(servers, node)
+	if err != nil {
+		pe(err)
+		return
+	}
 	sync.cd("cd /home/appl")
 	modules := sync.getModules()
-	s.Stop()
+	spinner.Stop()
 
 	if len(modules) == 0 {
-		color.Red("\n\tNo modules from %s", servers[node])
+		color.Red("🌡 No modules from %s", servers[node])
 		return
 	}
 
@@ -93,14 +110,14 @@ func run(cmd *cobra.Command, args []string) {
 		Options: modules,
 	}
 
-	var r string
-	_ = survey.AskOne(prompt, &r)
+	var module string
+	_ = survey.AskOne(prompt, &module)
 
-	s.Restart()
-	sync.cd("cd " + r)
+	spinner.Restart()
+	sync.cd("cd " + module)
 	sync.cd("cd conf")
 	configs := sync.getConfigs()
-	s.Stop()
+	spinner.Stop()
 	if len(configs) > 0 {
 		prompt := &survey.MultiSelect{
 			Message: "Select files sync to current dir:",
@@ -110,7 +127,7 @@ func run(cmd *cobra.Command, args []string) {
 		var configFiles []string
 		_ = survey.AskOne(prompt, &configFiles)
 
-		if !doSync(s, sync, configFiles, servers[node]) {
+		if !doSync(sync, module, configFiles, servers[node]) {
 			return
 		}
 
@@ -121,15 +138,15 @@ func run(cmd *cobra.Command, args []string) {
 		_ = survey.AskOne(nginxPrompt, &isConfigurationNginx)
 
 		if isConfigurationNginx {
-			remotePort := sync.getRemotePort(r)
-			CompleteNginx(s, sync, r, servers[node], remotePort)
+			remotePort := sync.getRemotePort(module)
+			CompleteNginx(sync, module, servers[node], remotePort)
 		}
 	}
 }
 
-func doSync(s *spinner.Spinner, sync *Sync, configs []string, ip string) bool {
+func doSync(sync *Sync, module string, configs []string, ip string) bool {
 	if len(configs) <= 0 {
-		color.Red("\n\t🤒🤒You have not choose files to sync!!!\n\n")
+		color.Red("🌡 You have not choose files to sync!!!\n\n")
 		return false
 	}
 
@@ -147,7 +164,7 @@ func doSync(s *spinner.Spinner, sync *Sync, configs []string, ip string) bool {
 
 	isGoing := true
 	if isZip {
-		err := packageFiles(s, path)
+		err := packageFiles(path)
 		if err != nil {
 			prompt := &survey.Confirm{
 				Message: "压缩tar包失败,是否继续?",
@@ -166,32 +183,38 @@ func doSync(s *spinner.Spinner, sync *Sync, configs []string, ip string) bool {
 
 	// copy remote file change local
 	for _, config := range configs {
-		s.Restart()
+		spinner.Restart()
 		content, err := sync.getContent(config)
 		if err != nil {
-			s.Stop()
+			spinner.Stop()
 			color.Red("Get remote content error, file: %s", config)
 			continue
 		}
 
-		content = strings.ReplaceAll(content, ip, "")
+		pwd, err := os.Getwd()
+		if err != nil {
+			pe(err)
+			return false
+		}
+		content = strings.ReplaceAll(content, filepath.Join("/home/appl/", module), pwd)
+		content = strings.ReplaceAll(content, "127.0.0.1", ip)
 		content = strings.ReplaceAll(content, "\r\n\r\n", "\r\n")
 		f := filepath.Join(path, config)
 		err = ioutil.WriteFile(f, []byte(content), 0644)
 		if err != nil {
-			s.Stop()
+			spinner.Stop()
 			color.Red("\t❗️❗️❗️File: %s write error: %s", config, err)
 			return false
 		}
-		s.Stop()
+		spinner.Stop()
 		color.Green("🍺 %s file is synced", f)
 	}
 	return true
 }
 
-func packageFiles(s *spinner.Spinner, path string) error {
-	s.Restart()
-	defer s.Stop()
+func packageFiles(path string) error {
+	spinner.Restart()
+	defer spinner.Stop()
 	// 创建文件
 	zfn := "resources.tar.gz"
 	fw, err := os.Create(filepath.Join(path, zfn))
@@ -283,5 +306,6 @@ func commandExec(cmd string) bool {
 }
 
 func pe(err error) {
+	spinner.Stop()
 	color.Red("🌡 %+v", err)
 }

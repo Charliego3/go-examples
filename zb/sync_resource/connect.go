@@ -92,9 +92,11 @@ func (s *Sync) exec(cmd string) (string, error) {
 }
 
 func (s *Sync) getRemotePort(node string) string {
+	spinner.Restart()
 	serverPath := fmt.Sprintf("/home/appl/%s/tomcat/conf/server.xml", node)
 	content, err := s.getContent(serverPath)
 	if err != nil {
+		spinner.Stop()
 		color.Red(err.Error())
 		return "8080"
 	}

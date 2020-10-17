@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -31,16 +29,12 @@ const (
 }`
 )
 
-var spin *spinner.Spinner
-
-func CompleteNginx(sp *spinner.Spinner, s *Sync, node, ip, port string) {
-	spin = sp
+func CompleteNginx(s *Sync, node, ip, port string) {
 	nginxPath := checkNginxInstall()
-	spin.Restart()
+	spinner.Restart()
 	confPath := getNginxConfigPath(nginxPath)
 	confPath = filepath.Dir(confPath)
 	configurationNginx(s, confPath, node, ip, port)
-	spin.Stop()
 	startNginx(confPath)
 }
 
@@ -83,10 +77,12 @@ func configurationNginx(s *Sync, confPath, node, ip, port string) {
 	err = ioutil.WriteFile(confFile, []byte(fmt.Sprintf(nginxConfig, serverName, proxyPass)), 0644)
 	if err != nil {
 		pe(err)
+		return
 	}
 
-	println(color.GreenString("🍺 Configuration nginx conf"), color.YellowString("(`%s`)", confFile), color.BlueString("server_name: `%s`, proxy_pass: `%s`", serverName, proxyPass))
 	configurationInclude(s, confPath)
+	spinner.Stop()
+	println(color.GreenString("🍺 Configuration nginx conf"), color.YellowString("(`%s`)", confFile), color.BlueString("server_name: `%s`, proxy_pass: `%s`", serverName, proxyPass))
 }
 
 func configurationInclude(s *Sync, confPath string) {
@@ -150,9 +146,9 @@ func getNginxConfigPath(nginx string) string {
 }
 
 func checkNginxInstall() string {
-	spin.Restart()
+	spinner.Restart()
 	path, err := checkExists("nginx")
-	spin.Stop()
+	spinner.Stop()
 	if err != nil {
 		isInstall := false
 		prompt := &survey.Confirm{
@@ -199,6 +195,7 @@ func installNginxFromCode() {
 		color.Red("🌡 Can't find nginx download url....")
 		return
 	}
+	spinner.Restart()
 	nginxDownloadUrl := nginxDomain + downloadUrl
 	resp, err := http.Get(nginxDownloadUrl)
 	if err != nil {
@@ -238,9 +235,11 @@ func installNginxFromCode() {
 	defer file.Close()
 	_, err = io.Copy(file, resp.Body)
 	if err != nil {
-		panic(err)
+		pe(err)
+		return
 	}
 
+	spinner.Stop()
 	nginxTarName := filepath.Base(file.Name())
 	commandExec(fmt.Sprintf("cd %s && tar -zxvf %s", nginxDir, nginxTarName))
 	unTarDir := strings.ReplaceAll(nginxTarName, ".tar.gz", "")
@@ -248,16 +247,19 @@ func installNginxFromCode() {
 }
 
 func getNginxDownloadUrl(nginxDomain string) string {
+	spinner.Restart()
 	nginxDownloadPageUrl := nginxDomain + "/en/download.html"
 	resp, err := http.Get(nginxDownloadPageUrl)
 	if err != nil {
-		log.Fatal(err)
+		pe(err)
+		return ""
 	}
 	defer resp.Body.Close()
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		pe(err)
+		return ""
 	}
 
 	var nginxDownUri string
@@ -268,6 +270,7 @@ func getNginxDownloadUrl(nginxDomain string) string {
 			nginxDownUri = href
 		}
 	})
+	spinner.Stop()
 	return nginxDownUri
 }
 
@@ -277,6 +280,7 @@ func installNginxFromBrew(brew string) {
 }
 
 func installBrew() {
+	spinner.Restart()
 	command := exec.Command("bash", "-c", "curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh")
 
 	output, err := command.Output()
@@ -299,6 +303,7 @@ func installBrew() {
 		return
 	}
 
+	spinner.Stop()
 	commandExec(fileName)
 }
 

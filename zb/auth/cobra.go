@@ -21,7 +21,8 @@ func (c *Cobra) CreateOrChooseSSHUser(sshUser *SSHUser) func(cmd *cobra.Command,
 func (c *Cobra) AddUserCmd(f func(su *SSHUser) error) *cobra.Command {
 	su := SSHUser{}
 	au := &cobra.Command{
-		Use: "add",
+		Use:   "add",
+		Short: "Add ssh user",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err, choose := AddUser(&su)
 			if err != nil {
