@@ -127,7 +127,7 @@ func CreateOrChooseSSHUser(su *SSHUser) error {
 
 func getUserNames() []string {
 	if err := initConfig(); err != nil {
-		color.Red("🌡 %+v", err)
+		color.Red("🌡  %+v", err)
 		return nil
 	}
 	users := viper.GetStringMap(usersKey)

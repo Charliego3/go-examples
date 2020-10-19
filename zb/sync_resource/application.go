@@ -36,7 +36,7 @@ func main() {
 	root.AddCommand(cobraAuth.AddUserCmd(addUserFunc), cobraAuth.ListUserCmd())
 
 	if err := root.Execute(); err != nil {
-		color.Red("🌡 %+v", err)
+		color.Red("🌡  %+v", err)
 	}
 }
 
@@ -44,7 +44,7 @@ func run(cmd *cobra.Command, args []string) {
 	path := filepath.Join("./src", "main", "resources")
 	_, err := os.Stat(path)
 	if err != nil {
-		color.Red("🌡 %+v", "this directory is not the correct Maven structure")
+		color.Red("🌡  %+v", "this directory is not the correct Maven structure")
 		return
 	}
 
@@ -54,6 +54,12 @@ func run(cmd *cobra.Command, args []string) {
 	if sshUser == nil {
 		return
 	}
+
+	if sshUser.Host == "" || sshUser.Port == "" || sshUser.Username == "" || sshUser.Password == "" {
+		color.Red("🌡  No choose user. Exit.")
+		return
+	}
+
 	spinner = spinner2.New(spinner2.CharSets[11], 100*time.Millisecond)
 	spinner.Start()
 	sync := &Sync{}
@@ -75,7 +81,7 @@ func run(cmd *cobra.Command, args []string) {
 	spinner.Stop()
 
 	if len(dashboards) == 0 {
-		color.Red("🌡 No servers from %s", sshUser.Username)
+		color.Red("🌡  No servers from %s", sshUser.Username)
 		return
 	}
 
@@ -103,7 +109,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	if len(modules) == 0 {
 		spinner.Stop()
-		color.Red("🌡 No modules from %s", servers[node])
+		color.Red("🌡  No modules from %s", servers[node])
 		return
 	}
 
@@ -160,7 +166,7 @@ func run(cmd *cobra.Command, args []string) {
 
 func doSync(sync *Sync, module string, configs []string, ip string) bool {
 	if len(configs) <= 0 {
-		color.Red("🌡 You have not choose files to sync!!!\n\n")
+		color.Red("🌡  You have not choose files to sync!!!\n\n")
 		return false
 	}
 
@@ -329,5 +335,5 @@ func commandExec(cmd string) bool {
 
 func pe(err error) {
 	spinner.Stop()
-	color.Red("🌡 %+v", err)
+	color.Red("🌡  %+v", err)
 }

@@ -202,7 +202,7 @@ func installNginxFromCode() {
 	const nginxDomain = "https://nginx.org"
 	downloadUrl := getNginxDownloadUrl(nginxDomain)
 	if downloadUrl == "" {
-		color.Red("🌡 Can't find nginx download url....")
+		color.Red("🌡  Can't find nginx download url....")
 		return
 	}
 	spinner.Restart()

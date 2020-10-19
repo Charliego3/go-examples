@@ -26,7 +26,7 @@ func (c *Cobra) AddUserCmd(f func(su *SSHUser) error) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err, choose := AddUser(&su)
 			if err != nil {
-				color.Red("🌡 %+v", err)
+				color.Red("🌡  %+v", err)
 				return err
 			}
 

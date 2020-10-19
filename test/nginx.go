@@ -51,14 +51,14 @@ func configurationNginx(configPath, ip, node string) {
 	color.Cyan("Nginx config servers path: %s", serversDir)
 	stat, err := os.Stat(serversDir)
 	if err != nil {
-		color.Red("🌡 %+v", err)
+		color.Red("🌡  %+v", err)
 		return
 	}
 
 	if !stat.IsDir() {
 		err := os.Mkdir(serversDir, 0644)
 		if err != nil {
-			color.Red("🌡 %+v", err)
+			color.Red("🌡  %+v", err)
 			return
 		}
 	}
@@ -66,7 +66,7 @@ func configurationNginx(configPath, ip, node string) {
 	confName := fmt.Sprintf("zb_%s_%s.conf", node, strings.ReplaceAll(ip, ".", "_"))
 	err = ioutil.WriteFile(confName, []byte(fmt.Sprintf(nginxConfig, "", "")), 0644)
 	if err != nil {
-		color.Red("🌡 %+v", err)
+		color.Red("🌡  %+v", err)
 	}
 }
 
@@ -76,7 +76,7 @@ func getNginxConfigPath(nginx string) string {
 	command.Stderr = &stderr
 	err := command.Run()
 	if err != nil {
-		color.Red("🌡 %+v", err)
+		color.Red("🌡  %+v", err)
 		return ""
 	}
 	version := stderr.String()
@@ -137,11 +137,11 @@ func installNginxFromBrew(brew string) {
 
 	err := command.Start()
 	if err != nil {
-		color.Red("🌡 %+v", err)
+		color.Red("🌡  %+v", err)
 		return
 	}
 	if err = command.Wait(); err != nil {
-		color.Red("🌡 %+v", err)
+		color.Red("🌡  %+v", err)
 	}
 }
 
@@ -150,21 +150,21 @@ func installBrew() {
 
 	output, err := command.Output()
 	if err != nil {
-		color.Red("🌡 %+v", err)
+		color.Red("🌡  %+v", err)
 		return
 	}
 
 	fileName := "./.brew.sh"
 	err = ioutil.WriteFile(fileName, output, 0644)
 	if err != nil {
-		color.Red("🌡 %+v", err)
+		color.Red("🌡  %+v", err)
 		return
 	}
 	defer os.Remove(fileName)
 
 	err = os.Chmod(fileName, 0777)
 	if err != nil {
-		color.Red("🌡 %+v", err)
+		color.Red("🌡  %+v", err)
 		return
 	}
 
@@ -175,11 +175,11 @@ func installBrew() {
 	command.Stderr = os.Stderr
 	err = command.Start()
 	if err != nil {
-		color.Red("🌡 %+v", err)
+		color.Red("🌡  %+v", err)
 		return
 	}
 	if err = command.Wait(); err != nil {
-		color.Red("🌡 %+v", err)
+		color.Red("🌡  %+v", err)
 	}
 }
 
