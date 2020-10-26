@@ -13,6 +13,8 @@ require (
 	github.com/go-vgo/robotgo v0.90.3
 	github.com/helloyi/go-sshclient v0.0.0-20200729145748-988808eb5279
 	github.com/shopspring/decimal v1.2.0
+	github.com/shurcooL/go v0.0.0-20200502201357-93f07166e636 // indirect
+	github.com/shurcooL/go-goon v0.0.0-20170922171312-37c2f522c041 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.1
 	github.com/whimthen/kits v1.0.1

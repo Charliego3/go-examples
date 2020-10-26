@@ -35,6 +35,9 @@ func CompleteNginx(s *Sync, node, ip, port string) {
 		spinner.Restart()
 		confPath := getNginxConfigPath(nginxPath)
 		confPath = filepath.Dir(confPath)
+		spinner.Stop()
+		color.Cyan("🍺 Nginx conf dir: %s", confPath)
+		spinner.Restart()
 		configurationNginx(s, confPath, node, ip, port)
 		startNginx(confPath)
 	}
@@ -59,12 +62,16 @@ func configurationNginx(s *Sync, confPath, node, ip, port string) {
 	serversDir := filepath.Join(confPath, "servers")
 	stat, err := os.Stat(serversDir)
 	if err != nil {
-		pe(err)
+		err := os.Mkdir(serversDir, 0777)
+		if err != nil {
+			pe(err)
+			return
+		}
 		return
 	}
 
 	if !stat.IsDir() {
-		err := os.Mkdir(serversDir, 0644)
+		err := os.Mkdir(serversDir, 0777)
 		if err != nil {
 			pe(err)
 			return
@@ -76,7 +83,7 @@ func configurationNginx(s *Sync, confPath, node, ip, port string) {
 	serverName := fmt.Sprintf("tt%s2.100-%s.net", node, i)
 	proxyPass := fmt.Sprintf("http://127.0.0.1:%s/", port)
 	confFile := filepath.Join(serversDir, confName)
-	err = ioutil.WriteFile(confFile, []byte(fmt.Sprintf(nginxConfig, serverName, proxyPass)), 0644)
+	err = ioutil.WriteFile(confFile, []byte(fmt.Sprintf(nginxConfig, serverName, proxyPass)), 0777)
 	if err != nil {
 		pe(err)
 		return
@@ -125,7 +132,7 @@ func configurationInclude(s *Sync, confPath string) {
 		newContent := string(content[:includeIndex])
 		newContent += fmt.Sprintf("\n\tinclude\t%s/servers/*;\n", confPath)
 		newContent += string(content[includeIndex:])
-		err := ioutil.WriteFile(nginxConf, []byte(newContent), 0644)
+		err := ioutil.WriteFile(nginxConf, []byte(newContent), 0777)
 		if err != nil {
 			pe(err)
 		}

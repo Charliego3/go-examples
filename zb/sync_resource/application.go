@@ -2,7 +2,9 @@ package main
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
+	"fmt"
 	"github.com/AlecAivazis/survey/v2"
 	spinner2 "github.com/briandowns/spinner"
 	"github.com/fatih/color"
@@ -219,6 +221,10 @@ func doSync(sync *Sync, module string, configs []string, ip string) bool {
 			continue
 		}
 
+		if config == "main.properties" {
+			content = changeWorkStatus(content)
+		}
+
 		pwd, err := os.Getwd()
 		if err != nil {
 			pe(err)
@@ -238,6 +244,114 @@ func doSync(sync *Sync, module string, configs []string, ip string) bool {
 		color.Green("🍺 %s file is synced", f)
 	}
 	return true
+}
+
+func changeWorkStatus(content string) string {
+	var falseWorks []string
+	var trueWorks []string
+	buffer := bytes.NewBufferString(content)
+	for {
+		line, err := buffer.ReadString('\n')
+		if err != nil && err == io.EOF {
+			break
+		} else if err != nil {
+			pe(err)
+			return ""
+		}
+		if strings.HasPrefix(strings.TrimSpace(line), "#") || line == "\r\n" || line == "\n" {
+			continue
+		}
+		wv := strings.Split(line, "=")
+		v := strings.ToUpper(strings.TrimSpace(wv[1]))
+		k := strings.TrimSpace(wv[0])
+		if k == "" || v == "" {
+			continue
+		}
+		if v == "FALSE" {
+			falseWorks = append(falseWorks, fmt.Sprintf("%s - (%s)", k, color.RedString(v)))
+		} else if v == "TRUE" {
+			trueWorks = append(trueWorks, fmt.Sprintf("%s - (%s)", k, color.BlueString(v)))
+		}
+	}
+
+	var selected2Open []string
+	if len(falseWorks) > 0 {
+		// 是否将main.properties中的任务都置为false
+		prompt := &survey.MultiSelect{
+			Message: fmt.Sprintf("Select the works from `%s` to be open:", color.MagentaString("main.properties")),
+			Options: falseWorks,
+		}
+		spinner.Stop()
+		err := survey.AskOne(prompt, &selected2Open)
+		if err != nil {
+			pe(err)
+			return ""
+		}
+	}
+
+	var selected2Close []string
+	if len(trueWorks) > 0 {
+		// 是否将main.properties中的任务都置为true
+		prompt := &survey.MultiSelect{
+			Message: fmt.Sprintf("Select the works from `%s` to be close:", color.MagentaString("main.properties")),
+			Options: trueWorks,
+		}
+		spinner.Stop()
+		err := survey.AskOne(prompt, &selected2Close)
+		if err != nil {
+			pe(err)
+			return ""
+		}
+	}
+
+	spinner.Restart()
+	bs := bytes.Buffer{}
+	if len(selected2Open) > 0 || len(selected2Close) > 0 {
+		kv := map[string]bool{}
+		for _, work := range selected2Open {
+			kv[work[:strings.Index(work, " ")]] = true
+		}
+		for _, work := range selected2Close {
+			kv[work[:strings.Index(work, " ")]] = false
+		}
+		buffer = bytes.NewBufferString(content)
+		for {
+			line, err := buffer.ReadString('\n')
+			if err != nil && err == io.EOF {
+				break
+			} else if err != nil {
+				pe(err)
+				return ""
+			}
+			if strings.HasPrefix(strings.TrimSpace(line), "#") || line == "\r\n" || line == "\n" {
+				bs.WriteString(line)
+				continue
+			}
+
+			line = strings.TrimSpace(line)
+			wv := strings.Split(line, "=")
+			value := strings.ToUpper(strings.TrimSpace(wv[1]))
+			if value != "FALSE" && value != "TRUE" {
+				bs.WriteString(line)
+				continue
+			}
+			work := strings.TrimSpace(wv[0])
+			if open, ok := kv[work]; ok {
+				bs.WriteString(work)
+				bs.WriteString("=")
+				if open {
+					bs.WriteString("true\n")
+				} else {
+					bs.WriteString("false\n")
+				}
+			} else {
+				bs.WriteString(line)
+				bs.WriteString("\n")
+			}
+		}
+	}
+
+	return bs.String()
 }
 
 func packageFiles(path string) error {
