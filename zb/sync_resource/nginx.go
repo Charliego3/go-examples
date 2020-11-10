@@ -47,14 +47,10 @@ func startNginx(confPath string) {
 	_, err := os.Stat(filepath.Join(confPath, "nginx.pid"))
 	if err != nil {
 		color.Cyan("🍺 Will be start nginx: May be need enter user password")
-		err := exec.Command("bash", "-c", "sudo nginx").Run()
-		if err != nil {
-			pe(err)
-			return
-		}
+		commandExec("sudo nginx")
 	} else {
 		color.Cyan("🍺 Will be reload nginx conf: May be need enter user password")
-		_ = exec.Command("bash", "-c", "sudo nginx -s reload").Run()
+		commandExec("sudo nginx -s reload")
 	}
 }
 
