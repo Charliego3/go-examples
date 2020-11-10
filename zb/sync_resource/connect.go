@@ -18,13 +18,14 @@ import (
 )
 
 type Sync struct {
-	session *ssh.Session
-	client  *ssh.Client
-	stdin   io.WriteCloser
-	stdout  io.Reader
-	output  bytes.Buffer
-	read    int
-	prompt  string
+	session    *ssh.Session
+	client     *ssh.Client
+	stdin      io.WriteCloser
+	stdout     io.Reader
+	output     bytes.Buffer
+	read       int
+	prompt     string
+	basePrompt string
 }
 
 var (
@@ -87,8 +88,8 @@ func (s *Sync) close() {
 	}
 }
 
-func (s *Sync) exec(cmd string) (string, error) {
-	return s.getStdout(cmd, "")
+func (s *Sync) exec(cmd string, isContent bool) (string, error) {
+	return s.getStdout(cmd, "", isContent)
 }
 
 func (s *Sync) getRemotePort(node string) string {
@@ -118,11 +119,11 @@ func (s *Sync) getRemotePort(node string) string {
 	return server.Service.Connector[0].Port
 }
 
-func (s *Sync) getPrompt(servers map[string]string, ip string) (string, error) {
-	return s.getStdout(servers[ip], ip)
+func (s *Sync) getPrompt(server string, ip string) (string, error) {
+	return s.getStdout(server, ip, false)
 }
 
-func (s *Sync) getStdout(cmd, ip string) (string, error) {
+func (s *Sync) getStdout(cmd, ip string, isContent bool) (string, error) {
 	if s.session == nil {
 		return "", errors.New("please connect first")
 	}
@@ -170,11 +171,17 @@ func (s *Sync) getStdout(cmd, ip string) (string, error) {
 			break
 		}
 	}
+
+	waitingString = string(colorMatch.ReplaceAll([]byte(waitingString), []byte("")))
+	if isContent {
+		pt := strings.ReplaceAll(s.basePrompt+s.prompt, "~", s.prompt[1:len(s.prompt)-1])
+		waitingString = strings.ReplaceAll(waitingString, pt, "")
+	}
 	return waitingString, nil
 }
 
 func (s *Sync) dashboard() ([]string, map[string]string) {
-	txt, err := s.exec("")
+	txt, err := s.exec("", false)
 	if err != nil {
 		color.Red(err.Error())
 		return nil, nil
@@ -207,7 +214,7 @@ func (s *Sync) dashboard() ([]string, map[string]string) {
 }
 
 func (s *Sync) cd(dir string) string {
-	dir, err := s.exec(dir)
+	dir, err := s.exec(dir, false)
 	if err != nil {
 		color.Red(err.Error())
 		return ""
@@ -216,7 +223,7 @@ func (s *Sync) cd(dir string) string {
 }
 
 func (s *Sync) ls() string {
-	rtn, err := s.exec("ls")
+	rtn, err := s.exec("ls", false)
 	if err != nil {
 		color.Red(err.Error())
 		return ""
@@ -269,15 +276,11 @@ func (s *Sync) getConfigs() []string {
 
 func (s *Sync) getContent(filePath string) (string, error) {
 	cmd := "cat " + filePath
-	content, err := s.exec(cmd)
+	content, err := s.exec(cmd, true)
 	if err != nil {
 		return "", err
 	}
 
-	lastIndex := strings.LastIndex(content, "\r\n")
-	if lastIndex <= 0 {
-		lastIndex = len(content)
-	}
-	content = strings.ReplaceAll(content[len(cmd):lastIndex], "\r\n", "\n")
+	content = strings.ReplaceAll(content[len(cmd):], "\r\n", "\n")
 	return content[1:], nil
 }

@@ -100,11 +100,12 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	spinner.Restart()
-	_, err = sync.getPrompt(servers, node)
+	pt, err := sync.getPrompt(servers[node], node)
 	if err != nil {
 		pe(err)
 		return
 	}
+	sync.basePrompt = strings.TrimSpace(strings.ReplaceAll(pt, ":~$", ""))
 	sync.cd("cd /home/appl")
 	modules := sync.getModules()
 	spinner.Stop()
@@ -328,8 +329,8 @@ func changeWorkStatus(content string) string {
 				continue
 			}
 
-			line = strings.TrimSpace(line)
-			wv := strings.Split(line, "=")
+			lineC := strings.TrimSpace(line)
+			wv := strings.Split(lineC, "=")
 			value := strings.ToUpper(strings.TrimSpace(wv[1]))
 			if value != "FALSE" && value != "TRUE" {
 				bs.WriteString(line)
@@ -346,12 +347,11 @@ func changeWorkStatus(content string) string {
 				}
 			} else {
 				bs.WriteString(line)
-				bs.WriteString("\n")
 			}
 		}
+		return bs.String()
 	}
-
-	return bs.String()
+	return content
 }
 
 func packageFiles(path string) error {
