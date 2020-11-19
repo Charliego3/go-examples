@@ -32,7 +32,7 @@ func init() {
 
 func getDogConfig() (config DogConfig, err error) {
 	// 检查$HOME/.config.dog.json文件是否存在
-	err = checkConfig(dogConfigPath, false)
+	err = checkPath(dogConfigPath, false)
 	// .config.dog.json 不存在
 	var content []byte
 	var dogConfig DogConfig
@@ -65,7 +65,7 @@ func getDogConfig() (config DogConfig, err error) {
 
 	envConfigFilePath := filepath.Join(dogConfig.EnvPath, envConfigName)
 	// 检查$envConfigDirPath/.environment.json文件是否存在
-	err = checkConfig(envConfigFilePath, false)
+	err = checkPath(envConfigFilePath, false)
 	if err != nil {
 		askAndCloneEnvConfigFromGit(dogConfig.EnvPath, dogConfig.GitPath)
 	}
@@ -94,7 +94,7 @@ func getDogConfig() (config DogConfig, err error) {
 func askAndCloneEnvConfigFromGit(envConfigPath, gitPath string) string {
 	// check .git is exists
 	dotGit := filepath.Join(envConfigPath, ".git")
-	err := checkConfig(dotGit, false)
+	err := checkPath(dotGit, false)
 	if err == nil {
 		runCmd(fmt.Sprintf("cd %s && git pull --rebase origin master", envConfigPath))
 		return ""
@@ -115,7 +115,7 @@ func askEnvConfigPath(repeat bool) string {
 	}
 	envConfigPath := ask(message)
 
-	err := checkConfig(envConfigPath, false)
+	err := checkPath(envConfigPath, false)
 	if err != nil {
 		askEnvConfigPath(true)
 	}
@@ -142,7 +142,7 @@ func getDogConfigPath() string {
 	return dogConfigPath
 }
 
-func checkConfig(configPath string, isCreate bool) error {
+func checkPath(configPath string, isCreate bool) error {
 	stat, err := os.Stat(configPath)
 	if err != nil {
 		if isCreate {
