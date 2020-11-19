@@ -104,7 +104,7 @@ func askAndCloneEnvConfigFromGit(envConfigPath, gitPath string) string {
 	localGitPath := filepath.Join(envConfigPath, dir)
 	runCmd(fmt.Sprintf("cd %s && git clone %s", envConfigPath, gitPath))
 	log.Println("LocalGitPath:", localGitPath, "EncConfigPath:", envConfigPath)
-	runCmd(fmt.Sprintf("mv -f %s/{*,.[^.]*,..?*} %s && rm -rf %s", localGitPath, envConfigPath, localGitPath)) // mv dot(hidden) and other files
+	runCmd(fmt.Sprintf("mv -f %s/{*,.[^.]*} %s && rm -rf %s", localGitPath, envConfigPath, localGitPath)) // mv dot(hidden) and other files
 	return ""
 }
 
