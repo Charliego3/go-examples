@@ -2,19 +2,19 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/briandowns/spinner"
+	"github.com/fatih/color"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-	"time"
+	"strings"
 )
 
 type DogConfig struct {
 	GitPath string
-	Links   map[string]string
-	isEmpty bool
+	EnvPath string
 }
 
 const (
@@ -33,39 +33,51 @@ func init() {
 func getDogConfig() (config DogConfig, err error) {
 	// 检查$HOME/.config.dog.json文件是否存在
 	err = checkConfig(dogConfigPath, false)
-	var envConfigPath string
 	// .config.dog.json 不存在
+	var content []byte
+	var dogConfig DogConfig
 	if err != nil {
-		envConfigPath = askEnvConfigPath(false)
-		log.Println("EnvConfigPath:", envConfigPath)
-		err = ioutil.WriteFile(dogConfigPath, []byte(envConfigPath), 0666)
+		dogConfig.EnvPath = askEnvConfigPath(false)
+		dogConfig.GitPath = ask("What is you config properties git URL?")
+		log.Println("EnvConfigDirPath:", dogConfig.EnvPath, "GitPath:", dogConfig.GitPath)
+		content, err = json.Marshal(dogConfig)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		err = ioutil.WriteFile(dogConfigPath, content, 0666)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 	} else {
-		var bytes []byte
-		bytes, err = ioutil.ReadFile(dogConfigPath)
+		content, err = ioutil.ReadFile(dogConfigPath)
 		if err != nil {
 			return
 		}
 
-		envConfigPath = string(bytes)
+		err = json.Unmarshal(content, &dogConfig)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 	}
 
-	// 检查$envConfigPath/.environment.json文件是否存在, 不存在则创建
-	err = checkConfig(envConfigPath, true)
+	envConfigFilePath := filepath.Join(dogConfig.EnvPath, envConfigName)
+	// 检查$envConfigDirPath/.environment.json文件是否存在
+	err = checkConfig(envConfigFilePath, false)
 	if err != nil {
-		_ = ask("What is you backup git URL?")
-		progress := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
-		progress.Start()
-		progress.Stop()
+		askAndCloneEnvConfigFromGit(dogConfig.EnvPath, dogConfig.GitPath)
+	}
+
+	bytes, err := ioutil.ReadFile(envConfigFilePath)
+	if err != nil {
+		log.Println(err)
 		return
 	}
 
-	bytes, err := ioutil.ReadFile(envConfigPath)
-	if err != nil {
-		return
+	if len(bytes) == 0 {
+		askAndCloneEnvConfigFromGit(dogConfig.EnvPath, dogConfig.GitPath)
 	}
 
 	var a map[string]interface{}
@@ -74,9 +86,26 @@ func getDogConfig() (config DogConfig, err error) {
 		return
 	}
 
-	return DogConfig{
-		isEmpty: true,
-	}, nil
+	log.Printf("%+v\n", a)
+
+	return DogConfig{}, nil
+}
+
+func askAndCloneEnvConfigFromGit(envConfigPath, gitPath string) string {
+	// check .git is exists
+	dotGit := filepath.Join(envConfigPath, ".git")
+	err := checkConfig(dotGit, false)
+	if err == nil {
+		runCmd(fmt.Sprintf("cd %s && git pull --rebase origin master", envConfigPath))
+		return ""
+	}
+
+	dir := gitPath[strings.LastIndex(gitPath, "/")+1 : strings.LastIndex(gitPath, ".")]
+	localGitPath := filepath.Join(envConfigPath, dir)
+	runCmd(fmt.Sprintf("cd %s && git clone %s", envConfigPath, gitPath))
+	log.Println("LocalGitPath:", localGitPath, "EncConfigPath:", envConfigPath)
+	runCmd(fmt.Sprintf("mv -f %s/{*,.[^.]*,..?*} %s && rm -rf %s", localGitPath, envConfigPath, localGitPath)) // mv dot(hidden) and other files
+	return ""
 }
 
 func askEnvConfigPath(repeat bool) string {
@@ -86,7 +115,6 @@ func askEnvConfigPath(repeat bool) string {
 	}
 	envConfigPath := ask(message)
 
-	envConfigPath = filepath.Join(envConfigPath, envConfigName)
 	err := checkConfig(envConfigPath, false)
 	if err != nil {
 		askEnvConfigPath(true)
@@ -96,7 +124,7 @@ func askEnvConfigPath(repeat bool) string {
 
 func ask(message string) string {
 	question := []*survey.Question{{
-		Prompt:   &survey.Input{Message: message},
+		Prompt:   &survey.Input{Message: color.MagentaString(message)},
 		Validate: survey.Required,
 	}}
 	var result string
