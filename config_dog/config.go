@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
+	"github.com/sqweek/dialog"
 	"io/ioutil"
 	"log"
 	"os"
@@ -67,17 +68,13 @@ func getDogConfig() (config DogConfig, err error) {
 	// 检查$envConfigDirPath/.environment.json文件是否存在
 	err = checkPath(envConfigFilePath, false)
 	if err != nil {
-		askAndCloneEnvConfigFromGit(dogConfig.EnvPath, dogConfig.GitPath)
+		askAndCloneEnvConfigFromGit(envConfigFilePath, dogConfig.EnvPath, dogConfig.GitPath)
 	}
 
 	bytes, err := ioutil.ReadFile(envConfigFilePath)
 	if err != nil {
 		log.Println(err)
 		return
-	}
-
-	if len(bytes) == 0 {
-		askAndCloneEnvConfigFromGit(dogConfig.EnvPath, dogConfig.GitPath)
 	}
 
 	var a map[string]interface{}
@@ -91,7 +88,27 @@ func getDogConfig() (config DogConfig, err error) {
 	return DogConfig{}, nil
 }
 
-func askAndCloneEnvConfigFromGit(envConfigPath, gitPath string) string {
+func askAndCloneEnvConfigFromGit(envConfigFilePath, envConfigPath, gitPath string) string {
+	defer func() {
+		err := checkPath(envConfigFilePath, false)
+		if err != nil {
+			//message := fmt.Sprintf("\n‼️  %s %s\n‼️  %s %s\n\n%s\n",
+			//	color.RedString("Config File not found:"),
+			//	color.MagentaString(envConfigFilePath),
+			//	color.RedString("Confirm that the git url:"),
+			//	color.HiBlueString(gitPath),
+			//	color.YellowString("if you want to change git url can be use `config_dog --git 'your git url'`"),
+			//)
+			//print(message)
+			message := fmt.Sprintf("\n‼️  Config File not found: %s\n‼️  Confirm that the git url: %s\n\nif you want to change git url can be use `config_dog --git 'your git url'`\n",
+				envConfigFilePath,
+				gitPath,
+			)
+			dialog.Message("%s", message).Title("Are you sure?").Error()
+			os.Exit(0)
+		}
+	}()
+
 	// check .git is exists
 	dotGit := filepath.Join(envConfigPath, ".git")
 	err := checkPath(dotGit, false)
