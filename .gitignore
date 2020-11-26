@@ -16,3 +16,6 @@
 
 .idea/
 *.iml
+/config_dog/application
+/config_dog/config_dog
+/confirm_window/confirm_window
