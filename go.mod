@@ -10,6 +10,7 @@ require (
 	github.com/andlabs/ui v0.0.0-20200610043537-70a69d6ae31e // indirect
 	github.com/briandowns/spinner v1.11.1
 	github.com/bwmarrin/snowflake v0.3.0
+	github.com/caseymrm/menuet v1.0.1
 	github.com/fatih/color v1.9.0
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gen2brain/dlgs v0.0.0-20201118155338-03fe7f81ad25
