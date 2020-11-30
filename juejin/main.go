@@ -59,7 +59,6 @@ func quiver() {
 				meta := Meta{}
 				_ = json.Unmarshal(bytes, &meta)
 
-
 				children := meta.Children[3].Children
 				for _, child := range children {
 
@@ -82,7 +81,7 @@ func quiver() {
 func juejin(targetDir string) {
 	flag.StringVar(&uid, "uid", "5b30bc9ae51d4558ac4890aa", "The Juejin login user uid")
 	flag.StringVar(&clientId, "cid", "1595904852284", "The Juejin login user clientId")
-	flag.StringVar(&token, "token", "eyJhY2Nlc3NfdG9rZW4iOiJkRkNBd0lHS1FnWGIwVnh3IiwicmVmcmVzaF90b2tlbiI6InlpMmhNejBVSXVISzFFbGwiLCJ0b2tlbl90eXBlIjoibWFjIiwiZXhwaXJlX2luIjoyNTkyMDAwfQ==", "Login user token")
+	flag.StringVar(&token, "token", "", "Login user token")
 	flag.StringVar(&src, "src", "web", "src, emmm.........")
 	flag.Parse()
 
@@ -98,7 +97,7 @@ func juejin(targetDir string) {
 	listSection := q.GetListSection("5afc2e5f6fb9a07a9b362527")
 	for index, section := range listSection.D {
 		content := q.GetSection(section.Id)
-		mdp := filepath.Join(targetDir, strconv.Itoa(index+1) + "、 "+content.D.Title+".md")
+		mdp := filepath.Join(targetDir, strconv.Itoa(index+1)+"、 "+content.D.Title+".md")
 
 		err := ioutil.WriteFile(mdp, []byte(content.D.Content), 0644)
 		if err != nil {
