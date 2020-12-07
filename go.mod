@@ -17,6 +17,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-vgo/robotgo v0.90.3
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
+	github.com/gotk3/gotk3 v0.5.1
 	github.com/helloyi/go-sshclient v0.0.0-20200729145748-988808eb5279
 	github.com/shopspring/decimal v1.2.0
 	github.com/spf13/cobra v1.0.0
