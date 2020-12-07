@@ -7,12 +7,19 @@ require (
 	github.com/360EntSecGroup-Skylar/excelize/v2 v2.3.0
 	github.com/AlecAivazis/survey/v2 v2.1.1
 	github.com/PuerkitoBio/goquery v1.6.0
+	github.com/alecthomas/chroma v0.8.2
+	github.com/andlabs/ui v0.0.0-20200610043537-70a69d6ae31e // indirect
 	github.com/briandowns/spinner v1.11.1
 	github.com/bwmarrin/snowflake v0.3.0
+	github.com/caseymrm/menuet v1.0.1
+	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/fatih/color v1.9.0
 	github.com/fsnotify/fsnotify v1.4.9
+	github.com/gen2brain/dlgs v0.0.0-20201118155338-03fe7f81ad25
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-vgo/robotgo v0.90.3
+	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
+	github.com/gotk3/gotk3 v0.5.1
 	github.com/helloyi/go-sshclient v0.0.0-20200729145748-988808eb5279
 	github.com/shopspring/decimal v1.2.0
 	github.com/spf13/cobra v1.0.0

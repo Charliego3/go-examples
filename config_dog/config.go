@@ -3,9 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/AlecAivazis/survey/v2"
-	"github.com/fatih/color"
-	"github.com/sqweek/dialog"
+	"github.com/gen2brain/dlgs"
 	"io/ioutil"
 	"log"
 	"os"
@@ -38,8 +36,10 @@ func getDogConfig() (config DogConfig, err error) {
 	var content []byte
 	var dogConfig DogConfig
 	if err != nil {
-		dogConfig.EnvPath = askEnvConfigPath(false)
-		dogConfig.GitPath = ask("What is you config properties git URL?")
+		dogConfig.EnvPath = askEnvConfigPath()
+		gitUrl, b, _ := dlgs.Entry("Git URL", "What is you config properties git URL?", "")
+		fmt.Printf("%v, %v, %v", gitUrl, b, err)
+		dogConfig.GitPath = gitUrl
 		log.Println("EnvConfigDirPath:", dogConfig.EnvPath, "GitPath:", dogConfig.GitPath)
 		content, err = json.Marshal(dogConfig)
 		if err != nil {
@@ -92,19 +92,8 @@ func askAndCloneEnvConfigFromGit(envConfigFilePath, envConfigPath, gitPath strin
 	defer func() {
 		err := checkPath(envConfigFilePath, false)
 		if err != nil {
-			//message := fmt.Sprintf("\n‼️  %s %s\n‼️  %s %s\n\n%s\n",
-			//	color.RedString("Config File not found:"),
-			//	color.MagentaString(envConfigFilePath),
-			//	color.RedString("Confirm that the git url:"),
-			//	color.HiBlueString(gitPath),
-			//	color.YellowString("if you want to change git url can be use `config_dog --git 'your git url'`"),
-			//)
-			//print(message)
-			message := fmt.Sprintf("\n‼️  Config File not found: %s\n‼️  Confirm that the git url: %s\n\nif you want to change git url can be use `config_dog --git 'your git url'`\n",
-				envConfigFilePath,
-				gitPath,
-			)
-			dialog.Message("%s", message).Title("Are you sure?").Error()
+			message := "\n‼️  Config File not found: %s\n\n‼️  Confirm that the git url: %s\n\nif you want to change git url can be use `config_dog --git 'your git url'`\n"
+			_, _ = dlgs.Error("Sync environment error", fmt.Sprintf(message, envConfigFilePath, gitPath))
 			os.Exit(0)
 		}
 	}()
@@ -125,28 +114,24 @@ func askAndCloneEnvConfigFromGit(envConfigFilePath, envConfigPath, gitPath strin
 	return ""
 }
 
-func askEnvConfigPath(repeat bool) string {
-	message := "What is environment config file path?"
-	if repeat {
-		message = "The path does not exist, please re-enter"
-	}
-	envConfigPath := ask(message)
+func askEnvConfigPath() string {
+	message := "What is environment config dir path?"
+	envConfigPath := ask(message, true)
 
 	err := checkPath(envConfigPath, false)
 	if err != nil {
-		askEnvConfigPath(true)
+		askEnvConfigPath()
 	}
 	return envConfigPath
 }
 
-func ask(message string) string {
-	question := []*survey.Question{{
-		Prompt:   &survey.Input{Message: color.MagentaString(message)},
-		Validate: survey.Required,
-	}}
-	var result string
-	_ = survey.Ask(question, &result)
-	return result
+func ask(message string, isDir bool) string {
+	file, b, err := dlgs.File(message, "", isDir)
+	if err != nil || !b {
+		_, _ = dlgs.Warning("Path is empty", "You not chose any path, now exit.")
+		os.Exit(0)
+	}
+	return file
 }
 
 func getDogConfigPath() string {
