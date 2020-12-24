@@ -30,7 +30,7 @@ func main() {
 }
 
 func handleClientRequest(client net.Conn) {
-	go func() {
+	defer func() {
 		if err := recover(); err != nil {
 			log.Println("Handle client request error:", err)
 		}
@@ -46,8 +46,13 @@ func handleClientRequest(client net.Conn) {
 		log.Println(err)
 		return
 	}
+	log.Printf("Bytes: %s\n", b[:])
 	var method, host, address string
-	_, err = fmt.Sscanf(string(b[:bytes.IndexByte(b[:], '\n')]), "%s%s", &method, &host)
+	indexByte := bytes.IndexByte(b[:], '\n')
+	if indexByte == -1 {
+		return
+	}
+	_, err = fmt.Sscanf(string(b[:indexByte]), "%s%s", &method, &host)
 	if err != nil {
 		log.Println("Scan host error:", err)
 		return
