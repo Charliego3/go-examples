@@ -59,7 +59,26 @@ func handleClientRequest(client net.Conn) {
 	}
 	log.Printf("METHOD: %s, HOST: %s, ADDRESS: %sl\n", method, host, address)
 	if strings.Index(host, "http://") == 0 || strings.Index(host, "https://") == 0 {
-		request, err := http.NewRequest(method, host, nil)
+
+		// 解析POST请求参数
+		buffer := bytes.NewBuffer(b[:])
+		index := 0
+		var body bytes.Buffer
+		for {
+			line, err := buffer.ReadBytes('\n')
+			if err != nil && err == io.EOF {
+				break
+			}
+
+			index += len(line)
+			if string(line) == "\r\n" {
+				log.Printf("Body: %s", b[index+1:])
+				body.Write(b[index+1:])
+				break
+			}
+		}
+
+		request, err := http.NewRequest(method, host, &body)
 		// resp, err := http.Get(host)
 		if err != nil {
 			log.Println("NewRequest error:", err)
