@@ -58,6 +58,8 @@ func deletePublicNoticeHandler(*cobra.Command, []string) {
 		return
 	}
 
+	logger.Printf("开始删除 [%s] 表数据, 每次删除 [%d] 条\n", table, limit)
+
 	for {
 		result, err := db.Exec(fmt.Sprintf("DELETE FROM %s LIMIT ?", table), limit)
 		if err != nil {
