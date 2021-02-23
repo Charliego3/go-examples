@@ -1,27 +1,30 @@
-<html>
-   <head>
-      <meta charset="utf-8"/>
-      <script src="wasm_exec.js"></script>
-   </head>
-   <body>
-      <script type="text/javascript">
-         const importObj = {
+<html lang="zh">
+<head>
+    <meta charset="utf-8"/>
+    <script src="wasm_exec.js"></script>
+    <title>WASM</title>
+</head>
+<body>
+    <script type="text/javascript">
+        const importObj = {
             module: {}
-         };
-         const go = new Go();
-         async function fetchAndInstantiate() {
+        };
+        const go = new Go();
+        async function fetchAndInstantiate() {
             const response = await fetch("main.wasm");
             const buffer = await response.arrayBuffer();
             const obj = await WebAssembly.instantiate(buffer, go.importObject);
             console.log(obj);
             go.run(obj.instance);
-         }
-         fetchAndInstantiate();
-      </script>
+        }
+        fetchAndInstantiate();
+    </script>
 
-        <input id="num" type="number" />
-        <!-- <button id="btn" onclick="ans.innerHTML=fibFunc(num.value * 1)">Click</button> -->
-        <button id="btn" onclick="fibFunc(num.value * 1, (v)=> ans.innerHTML=v)">Click</button>
-        <p id="ans">1</p>
-   </body>
+    <ul>
+        <a href="#" onclick="page('1')"><li>1 page</li></a>
+        <a href="#" onclick="page('2')"><li>2 page</li></a>
+    </ul>
+
+    <div id="content" style="width: 500px;height: 200px;border: solid 1px red;"></div>
+</body>
 </html>
