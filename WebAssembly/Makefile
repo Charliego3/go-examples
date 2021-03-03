@@ -6,3 +6,5 @@ static/wasm_exec.js:
 
 static/main.wasm: main.go
 	GO111MODULE=auto GOOS=js GOARCH=wasm go build -o static/main.wasm .
+
+generate: static/wasm_exec.js static/main.wasm
