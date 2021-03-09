@@ -1,6 +1,6 @@
 module github.com/whimthen/temp
 
-go 1.15
+go 1.16
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize/v2 v2.3.0
@@ -19,9 +19,8 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gotk3/gotk3 v0.5.1
 	github.com/progrium/macdriver v0.0.0-20210209011743-cc510679fe06
+	github.com/progrium/watcher v1.0.7
 	github.com/shopspring/decimal v1.2.0
-	github.com/shurcooL/go v0.0.0-20200502201357-93f07166e636 // indirect
-	github.com/shurcooL/go-goon v0.0.0-20210110234559-7585751d9a17 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/sqweek/dialog v0.0.0-20200911184034-8a3d98e8211d
 	github.com/stretchr/testify v1.6.1 // indirect
