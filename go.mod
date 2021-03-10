@@ -19,7 +19,6 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gotk3/gotk3 v0.5.1
 	github.com/progrium/macdriver v0.0.0-20210209011743-cc510679fe06
-	github.com/progrium/watcher v1.0.7
 	github.com/shopspring/decimal v1.2.0
 	github.com/spf13/cobra v1.0.0
 	github.com/sqweek/dialog v0.0.0-20200911184034-8a3d98e8211d

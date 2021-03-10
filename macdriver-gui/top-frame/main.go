@@ -4,13 +4,12 @@ import (
 	_ "embed"
 	"flag"
 	"fmt"
-	"log"
-	"runtime"
-
 	"github.com/progrium/macdriver/cocoa"
 	"github.com/progrium/macdriver/core"
 	"github.com/progrium/macdriver/objc"
 	"github.com/progrium/macdriver/webkit"
+	"log"
+	"runtime"
 )
 
 //go:embed index.html
@@ -80,14 +79,14 @@ func main() {
 				Height: float64(370),
 			},
 		},
-			//cocoa.NSClosableWindowMask,
-			cocoa.NSResizableWindowMask,
+			cocoa.NSResizableWindowMask|cocoa.NSTitledWindowMask|cocoa.NSClosableWindowMask,
+			//cocoa.NSTexturedBackgroundWindowMask|cocoa.NSMiniaturizableWindowMask,
 			cocoa.NSBackingStoreBuffered, false)
 		w.SetContentView(wv)
 		w.SetBackgroundColor(cocoa.NSColor_Clear())
-		w.SetOpaque(false)
-		w.SetTitleVisibility(cocoa.NSWindowTitleVisible)
-		w.SetTitlebarAppearsTransparent(true)
+		w.SetOpaque(true)
+		w.SetTitleVisibility(cocoa.NSWindowTitleHidden)
+		w.SetTitlebarAppearsTransparent(false)
 		w.SetIgnoresMouseEvents(false)
 		w.SetMovableByWindowBackground(true)
 		w.SetLevel(cocoa.NSMainMenuWindowLevel + 2)
