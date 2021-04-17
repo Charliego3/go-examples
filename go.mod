@@ -15,7 +15,6 @@ require (
 	github.com/gen2brain/dlgs v0.0.0-20201118155338-03fe7f81ad25
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-vgo/robotgo v0.90.3
-	github.com/golang/protobuf v1.4.3
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gotk3/gotk3 v0.5.1
 	github.com/kataras/golog v0.1.7
@@ -32,5 +31,5 @@ require (
 	golang.org/x/text v0.3.5 // indirect
 	google.golang.org/genproto v0.0.0-20210224155714-063164c882e6 // indirect
 	google.golang.org/grpc v1.36.0
-	google.golang.org/protobuf v1.25.0
+	google.golang.org/protobuf v1.26.0
 )
