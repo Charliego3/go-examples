@@ -40,7 +40,7 @@ func init() {
 	flags.BoolVarP(&lazyQuotes, "lazyQuotes", "l", true, "csv file reade lazy quote")
 	flags.IntVarP(&fieldsPerRecord, "fieldsPerRecord", "r", 0, "csv filee read fieldsPerRecord")
 
-	//var entrustCsvFile string
+	// entrust
 	entrustCmd := &cobra.Command{
 		Use: "entrust",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -52,6 +52,19 @@ func init() {
 	}
 	entrustCmd.PersistentFlags().StringVarP(&csvfile, "file", "f", "", "the entrust csv file")
 	replaceCmd.AddCommand(entrustCmd)
+
+	// trans_record
+	transCmd := &cobra.Command{
+		Use: "trans",
+		Run: func(cmd *cobra.Command, args []string) {
+			timecols = []int{9, 10}
+			decimalCols = []int{1, 2, 3}
+			lazyQuotes = true
+			replace(cmd, args)
+		},
+	}
+	transCmd.PersistentFlags().StringVarP(&csvfile, "file", "f", "", "the entrust csv file")
+	replaceCmd.AddCommand(transCmd)
 
 	// golog.SetLevel(golog.DebugLevel.String())
 	golog.SetLevel(golog.InfoLevel.String())
