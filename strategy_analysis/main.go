@@ -43,14 +43,13 @@ func main() {
 
 	rootCmd := cobra.Command{
 		Use:     cmd,
-		Example: fmt.Sprintf("%s", cmd),
+		Example: fmt.Sprintf(`  %s -e 130 --robot 14196%s  %s --robot 14196 --sd "user:password@tcp(ip:port)/dbname" --ed "user:password@tcp(ip:port)/dbname"`, cmd, "\n", cmd),
 		Run:     analysisFunc,
 	}
 
 	flags := rootCmd.Flags()
-	flags.StringVarP(&args.Env, "env", "e", "", "环境, eg: 130, 123")
+	flags.StringVarP(&args.Env, "env", "e", "", "环境, 测试环境有效值: 130, 123, 129, 218")
 	flags.Int64Var(&args.RobotId, "robot", 0, "机器人ID")
-	flags.StringVar(&args.Market, "market", "", "市场名称, eg: btcqc")
 	flags.StringVar(&args.ProdStrategyDBURL, "sd", "", "网格服务的数据库连接地址, eg: user:password@tcp(ip:port)/dbname")
 	flags.StringVar(&args.ProdEntrustDBURL, "ed", "", "盘口服务的数据库连接地址, eg: user:password@tcp(ip:port)/dbname")
 
