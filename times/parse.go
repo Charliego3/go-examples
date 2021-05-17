@@ -10,7 +10,7 @@ func Parse(millis int64) time.Time {
 }
 
 func Parse2S(millis int64, format ...string) string {
-	formater := "2006-06-01 15:04:05.000"
+	formater := "2006-01-02 15:04:05.000"
 	if len(format) > 0 {
 		formater = format[0]
 	}

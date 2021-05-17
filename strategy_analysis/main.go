@@ -8,6 +8,7 @@ import (
 	"github.com/kataras/golog"
 	"github.com/shopspring/decimal"
 	"github.com/spf13/cobra"
+	"github.com/whimthen/temp/times"
 	"math/rand"
 	"os"
 	"strings"
@@ -28,6 +29,7 @@ var (
 	symbol   string
 
 	isProd bool
+	env    string
 )
 
 const (
@@ -63,7 +65,7 @@ func analysisFunc(*cobra.Command, []string) {
 		return
 	}
 
-	connected := connect(strategyDBURL, false)
+	connected := connect(strategyDBURL, 0)
 	if !connected {
 		return
 	}
@@ -78,7 +80,6 @@ func analysisFunc(*cobra.Command, []string) {
 	symbol = strings.ToUpper(market[:strings.Index(market, "_")])
 
 	if entrustDBURL == "" {
-		env := Envs[args.Env]
 		entrustDBURL = env + fmt.Sprintf(entrustDBName, strings.Replace(market, "_", "", -1))
 	}
 
@@ -87,7 +88,7 @@ func analysisFunc(*cobra.Command, []string) {
 		golog.Debugf("盘口DB URL: %s", entrustDBURL[strings.Index(entrustDBURL, "@"):])
 	}
 
-	connected = connect(entrustDBURL, true)
+	connected = connect(entrustDBURL, 1)
 	if !connected {
 		return
 	}
@@ -150,9 +151,9 @@ func analysis(record *GridRecord, first bool) {
 	first = false
 	var prefix string
 	if record.OriginRecordId.Valid {
-		prefix = fmt.Sprintf("[%s] GridIndex:[%d] -> 原始ID:[%s], 订单ID:[%d]", recordType, record.GridIndex, randomColor(record.OriginRecordId.Int64), record.Id)
+		prefix = fmt.Sprintf("[%s] Index:[%d] -> 原始ID:[%s], 订单ID:[%d]", recordType, record.GridIndex, randomColorWithStatus(record.OriginRecordId.Int64), record.Id)
 	} else {
-		prefix = fmt.Sprintf("[%s] GridIndex:[%d] -> 订单ID:[%s]", recordType, record.GridIndex, randomColor(record.Id))
+		prefix = fmt.Sprintf("[%s] Index:[%d] -> 订单ID:[%s]", recordType, record.GridIndex, randomColorWithStatus(record.Id))
 	}
 	if record.OrderId.Valid {
 		prefix += fmt.Sprintf(" -> 委托ID:[%s] ", record.OrderId.String)
@@ -166,9 +167,10 @@ func analysis(record *GridRecord, first bool) {
 	if record.IsIocOrder {
 		iocType = "IOC"
 	}
+
 	entrustType = iocType + entrustType
 	info := grid.GridInfo[record.GridIndex]
-	prefix += fmt.Sprintf("- 价格:[%s], 数量:[%s], 委托类型:[%s]", info.Price.String(), info.Amount.String(), entrustType)
+	prefix += fmt.Sprintf("- 网格价格:[%s]", randomColor(info.Price.String()))
 
 	var entrust *Entrust
 	var entrustOK bool
@@ -179,10 +181,10 @@ func analysis(record *GridRecord, first bool) {
 		if !entrustOK {
 			golog.Error("在盘口中找不到委托记录")
 		} else {
-			prefix += fmt.Sprintf(", 挂单价格:[%s]", decimal.Decimal(entrust.UnitPrice).String())
+			prefix += fmt.Sprintf(", 委托挂单价格:[%s], 挂单时间:[%s]", colorWithAttribute(currentColor, decimal.Decimal(entrust.UnitPrice).String()), times.Parse2S(entrust.SubmitTime))
 		}
 	}
-	prefix += " >> "
+	prefix += fmt.Sprintf(", 数量:[%s], 委托类型:[%s] >> ", info.Amount.String(), entrustType)
 	golog.SetPrefix(prefix)
 
 	switch record.Status {
@@ -201,7 +203,11 @@ func analysis(record *GridRecord, first bool) {
 				}
 
 				if entrust.Status == 2 {
-					golog.Warn("委托在盘口已成交")
+					extendMsg := ""
+					if entrust.Types == 4 || entrust.Types == 5 {
+						extendMsg = "(一般情况是IOC下单部分成交后, 剩余部分不满足最小下单量和最小下单额, 导致无法下单所致)"
+					}
+					golog.Warnf("网格记录正在挂单中, 但委托[%s]在盘口已成交%s....", record.OrderId, extendMsg)
 				} else if entrust.Status == 3 {
 					if isPart {
 						golog.Info("网格记录正在挂单中, 盘口中委托记录正在委托[部分成交]....")
@@ -225,7 +231,7 @@ func analysis(record *GridRecord, first bool) {
 		{
 			if entrustOK {
 				if entrust.Status == 2 {
-					golog.Infof("该订单对冲中, 委托已成交, 成交数量:[%s]", decimal.Decimal(entrust.CompleteNumber).String())
+					golog.Infof("该订单对冲中, 委托已成交数量:[%s]", decimal.Decimal(entrust.CompleteNumber).String())
 				} else if entrust.Status == 1 {
 					golog.Infof("该订单对冲中, 委托已撤销")
 				} else if entrust.Status == 3 {
@@ -246,14 +252,14 @@ func analysis(record *GridRecord, first bool) {
 		{
 			if entrustOK {
 				if entrust.Status == 2 {
-					golog.Infof("该订单已完成, 委托已成交, 成交数量:[%s]", decimal.Decimal(entrust.CompleteNumber).String())
+					golog.Infof("该订单已完成, 委托已成交数量:[%s]", decimal.Decimal(entrust.CompleteNumber).String())
 				} else if entrust.Status == 1 {
 					golog.Infof("该订单已完成, 委托已撤销")
 				} else if entrust.Status == 3 {
 					golog.Infof("该订单已完成, 委托已部分成交[%s]", decimal.Decimal(entrust.CompleteNumber).String())
 				}
 			} else {
-				golog.Info("订单已完成")
+				golog.Error("订单已完成, 但未查询到委托记录.....")
 			}
 
 			if record.IsOriginOrder {
@@ -325,49 +331,66 @@ func parseGrid() {
 }
 
 var (
-	colorStatus  = noChange
-	currentColor = color.FgBlue
-	colors       = []color.Attribute{
+	colorStatus            = noChange
+	currentColorWithStatus = color.FgBlue
+	currentColor           = color.FgBlue
+	colors                 = []color.Attribute{
 		color.FgBlue,
 		color.FgHiRed,
-		color.FgHiGreen,
+		//color.FgHiGreen,
 		color.FgYellow,
 		color.FgHiMagenta,
 		color.FgHiCyan,
 	}
 )
 
-func randomColor(content int64) string {
+func randomColorWithStatus(content int64) string {
 	if colorStatus == change {
 		cs := make([]color.Attribute, 0)
 		for _, attribute := range colors {
-			if currentColor != attribute {
+			if currentColorWithStatus != attribute {
 				cs = append(cs, attribute)
 			}
 		}
 		rn := rand.Intn(len(cs))
-		currentColor = cs[rn]
+		currentColorWithStatus = cs[rn]
 	} else if colorStatus == reset {
-		currentColor = color.FgBlue
+		currentColorWithStatus = color.FgBlue
 	}
 
 	rtn := fmt.Sprintf("%d", content)
-	switch currentColor {
-	case color.FgBlue:
-		rtn = color.BlueString(rtn)
-	case color.FgHiRed:
-		rtn = color.RedString(rtn)
-	case color.FgHiGreen:
-		rtn = color.GreenString(rtn)
-	case color.FgYellow:
-		rtn = color.YellowString(rtn)
-	case color.FgHiMagenta:
-		rtn = color.MagentaString(rtn)
-	case color.FgHiCyan:
-		rtn = color.CyanString(rtn)
-	}
+	return colorWithAttribute(currentColorWithStatus, rtn)
+}
 
-	return rtn
+func randomColor(content string) string {
+	cs := make([]color.Attribute, 0)
+	for _, attribute := range colors {
+		if currentColor != attribute {
+			cs = append(cs, attribute)
+		}
+	}
+	rn := rand.Intn(len(cs))
+	currentColor = cs[rn]
+	rtn := fmt.Sprintf("%s", content)
+	return colorWithAttribute(currentColor, rtn)
+}
+
+func colorWithAttribute(current color.Attribute, content string) string {
+	switch current {
+	case color.FgBlue:
+		content = color.BlueString(content)
+	case color.FgHiRed:
+		content = color.RedString(content)
+	case color.FgHiGreen:
+		content = color.GreenString(content)
+	case color.FgYellow:
+		content = color.YellowString(content)
+	case color.FgHiMagenta:
+		content = color.MagentaString(content)
+	case color.FgHiCyan:
+		content = color.CyanString(content)
+	}
+	return content
 }
 
 const (

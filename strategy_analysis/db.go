@@ -1,18 +1,21 @@
 package main
 
 import (
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/kataras/golog"
 	"github.com/shopspring/decimal"
+	"strings"
 )
 
 var (
-	entrustDB  *sqlx.DB
-	strategyDB *sqlx.DB
+	entrustDB     *sqlx.DB
+	entrustBackDB *sqlx.DB
+	strategyDB    *sqlx.DB
 )
 
-func connect(url string, isEntrust bool) bool {
+func connect(url string, types int) bool {
 	db, err := sqlx.Open("mysql", url)
 	if err != nil {
 		golog.Error("数据库连接异常", err)
@@ -25,10 +28,12 @@ func connect(url string, isEntrust bool) bool {
 		return false
 	}
 
-	if isEntrust {
+	if types == 0 {
+		strategyDB = db
+	} else if types == 1 {
 		entrustDB = db
 	} else {
-		strategyDB = db
+		entrustBackDB = db
 	}
 
 	return true
@@ -91,11 +96,27 @@ func getGridRecordByRobotId(robotId int64) (records []*GridRecord, ok bool) {
 }
 
 func getEntrustById(entrustId string) (entrust *Entrust, ok bool) {
+	entrust, ok = getEntrustByIdWithDB(entrustDB, entrustId)
+	if ok {
+		return
+	}
+
+	if entrustBackDB == nil {
+		backURL := env + fmt.Sprintf(entrustDBName+"_backup", strings.Replace(market, "_", "", -1))
+		ok := connect(backURL, 2)
+		if !ok {
+			return nil, false
+		}
+	}
+
+	return getEntrustByIdWithDB(entrustBackDB, entrustId)
+}
+
+func getEntrustByIdWithDB(db *sqlx.DB, entrustId string) (entrust *Entrust, ok bool) {
 	entrust = &Entrust{}
-	row := entrustDB.QueryRowx("SELECT * FROM entrust WHERE entrustId = ?", entrustId)
+	row := db.QueryRowx("SELECT * FROM entrust WHERE entrustId = ?", entrustId)
 	err := row.StructScan(entrust)
 	if err != nil {
-		golog.Errorf("查询委托记录失败, EntrustId:[%s]", entrustId)
 		return nil, false
 	}
 	return entrust, true

@@ -75,8 +75,8 @@ func parseArgs() bool {
 		return false
 	}
 
+	env = Envs[args.Env]
 	if args.Market != "" {
-		env := Envs[args.Env]
 		entrustDBURL = env + fmt.Sprintf(entrustDBName, args.Market)
 	}
 
