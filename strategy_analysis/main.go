@@ -170,22 +170,30 @@ func analysis(record *GridRecord, first bool) {
 
 	entrustType = iocType + entrustType
 	info := grid.GridInfo[record.GridIndex]
-	prefix += fmt.Sprintf("- 网格价格:[%s]", randomColor(info.Price.String()))
+	prefix += fmt.Sprintf("- 网格价格:[%s], 网格数量:[%s], 委托类型:[%s]", randomColor(info.Price.String()), info.Amount.String(), entrustType)
 
 	var entrust *Entrust
 	var entrustOK bool
-	if !record.OrderId.Valid { // 已委托
-		golog.Error("网格记录以生成, 委托还未成功....")
-	} else {
+	var entrustStatus int
+	if !record.OrderId.Valid {
+		entrustStatus = 1
+	} else { // 已委托
 		entrust, entrustOK = getEntrustById(record.OrderId.String)
 		if !entrustOK {
-			golog.Error("在盘口中找不到委托记录")
+			entrustStatus = 2
 		} else {
-			prefix += fmt.Sprintf(", 委托挂单价格:[%s], 挂单时间:[%s]", colorWithAttribute(currentColor, decimal.Decimal(entrust.UnitPrice).String()), times.Parse2S(entrust.SubmitTime))
+			prefix += fmt.Sprintf(", 委托挂单价格:[%s], 委托挂单数量:[%s], 委托成交数量:[%s], 挂单时间:[%s]", colorWithAttribute(currentColor, entrust.UnitPrice.String()), entrust.Numbers.String(), entrust.CompleteNumber.String(), times.Parse2S(entrust.SubmitTime))
 		}
 	}
-	prefix += fmt.Sprintf(", 数量:[%s], 委托类型:[%s] >> ", info.Amount.String(), entrustType)
+
+	prefix += " >> "
 	golog.SetPrefix(prefix)
+
+	if entrustStatus == 1 {
+		golog.Error("网格记录已生成, 委托还未成功....")
+	} else if entrustStatus == 2 {
+		golog.Error("在盘口中找不到委托记录")
+	}
 
 	switch record.Status {
 	case 1: // 挂单中
@@ -207,7 +215,7 @@ func analysis(record *GridRecord, first bool) {
 					if entrust.Types == 4 || entrust.Types == 5 {
 						extendMsg = "(一般情况是IOC下单部分成交后, 剩余部分不满足最小下单量和最小下单额, 导致无法下单所致)"
 					}
-					golog.Warnf("网格记录正在挂单中, 但委托[%s]在盘口已成交%s....", record.OrderId, extendMsg)
+					golog.Warnf("网格记录正在挂单中, 但委托[%v]在盘口已成交%s....", record.OrderId.String, extendMsg)
 				} else if entrust.Status == 3 {
 					if isPart {
 						golog.Info("网格记录正在挂单中, 盘口中委托记录正在委托[部分成交]....")

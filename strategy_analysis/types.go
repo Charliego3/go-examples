@@ -56,6 +56,10 @@ func (t *Time) Scan(src interface{}) error {
 
 type BigDecimal decimal.Decimal
 
+func (t BigDecimal) String() string {
+	return decimal.Decimal(t).String()
+}
+
 func (t BigDecimal) Value() (driver.Value, error) {
 	return t, nil
 }
