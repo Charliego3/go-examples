@@ -60,6 +60,10 @@ func (t BigDecimal) String() string {
 	return decimal.Decimal(t).String()
 }
 
+func (t BigDecimal) Cmp(d2 decimal.Decimal) int {
+	return decimal.Decimal(t).Cmp(d2)
+}
+
 func (t BigDecimal) Value() (driver.Value, error) {
 	return t, nil
 }

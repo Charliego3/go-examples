@@ -75,7 +75,7 @@ func analysisFunc(*cobra.Command, []string) {
 		return
 	}
 
-	market = r.Name
+	market = r.MarketName
 	currency = strings.ToUpper(market[strings.Index(market, "_")+1:])
 	symbol = strings.ToUpper(market[:strings.Index(market, "_")])
 
@@ -105,7 +105,7 @@ func analysisFunc(*cobra.Command, []string) {
 }
 
 func withRobot(robotId int64) {
-	records, ok := getGridRecordByRobotId(robotId)
+	records, ok := getGridRecordByRobotId(robotId, grid.GridAmount)
 	if !ok {
 		golog.Warn("未查询到网格记录, RobotId: ", robotId)
 		return
@@ -182,7 +182,11 @@ func analysis(record *GridRecord, first bool) {
 		if !entrustOK {
 			entrustStatus = 2
 		} else {
-			prefix += fmt.Sprintf(", 委托挂单价格:[%s], 委托挂单数量:[%s], 委托成交数量:[%s], 挂单时间:[%s]", colorWithAttribute(currentColor, entrust.UnitPrice.String()), entrust.Numbers.String(), entrust.CompleteNumber.String(), times.Parse2S(entrust.SubmitTime))
+			prefix += fmt.Sprintf(", 委托挂单价格:[%s], 委托挂单数量:[%s]", colorWithAttribute(currentColor, entrust.UnitPrice.String()), entrust.Numbers.String())
+			if entrust.CompleteNumber.Cmp(decimal.Zero) > 0 {
+				prefix += fmt.Sprintf(", 委托成交数量:[%s]", entrust.CompleteNumber.String())
+			}
+			prefix += fmt.Sprintf(", 挂单时间:[%s]", times.Parse2S(entrust.SubmitTime))
 		}
 	}
 

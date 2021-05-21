@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"io"
 	"log"
@@ -9,7 +10,11 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 )
+
+//go:embed proxy.pac
+var pac []byte
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -17,6 +22,22 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	go func() {
+		var one sync.Once
+		http.HandleFunc("/pac", func(w http.ResponseWriter, r *http.Request) {
+			proxyAutoConfig := bytes.ReplaceAll(pac, []byte("loopbackAddress"), []byte("192.168.1.20"))
+			w.Write(proxyAutoConfig)
+			one.Do(func() {
+				fmt.Printf("\n========== Proxy Auto-Config ==========\n%s\n=======================================\n", string(proxyAutoConfig))
+			})
+		})
+		err := http.ListenAndServe(":8082", http.DefaultServeMux)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}()
 
 	for {
 		client, err := l.Accept()
@@ -46,7 +67,7 @@ func handleClientRequest(client net.Conn) {
 		log.Println(err)
 		return
 	}
-	log.Printf("Bytes: %s\n", b[:])
+	//log.Printf("Bytes: %s\n", b[:])
 	var method, host, address string
 	indexByte := bytes.IndexByte(b[:], '\n')
 	if indexByte == -1 {
@@ -57,7 +78,7 @@ func handleClientRequest(client net.Conn) {
 		log.Println("Scan host error:", err)
 		return
 	}
-	log.Printf("METHOD: %s, HOST: %s, ADDRESS: %sl\n", method, host, address)
+	log.Printf("METHOD: %q, HOST: %q, ADDRESS: %q\n", method, host, address)
 	if strings.Index(host, "http://") == 0 || strings.Index(host, "https://") == 0 {
 
 		// 解析POST请求参数
@@ -72,7 +93,7 @@ func handleClientRequest(client net.Conn) {
 
 			index += len(line)
 			if string(line) == "\r\n" {
-				log.Printf("Body: %s", b[index+1:])
+				//log.Printf("Body: %s", b[index+1:])
 				body.Write(b[index+1:])
 				break
 			}
@@ -112,7 +133,7 @@ func handleClientRequest(client net.Conn) {
 		address = host
 	}
 
-	log.Printf("Client Conn: %+v, Address: %s", client, address)
+	//log.Printf("Client Conn: %+v, Address: %s", client, address)
 
 	//获得了请求的host和port，就开始拨号吧
 	server, err := net.Dial("tcp", address)
