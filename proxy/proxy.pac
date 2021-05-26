@@ -1,7 +1,11 @@
+function directMatch(url, host) {
+    return %s;
+}
+
 function FindProxyForURL(url, host) {
-    if (shExpMatch(host, "*weixin.qq.com") || shExpMatch(host, "*wx.qlogo.cn") || shExpMatch(host, "mmbiz.qpic.cn") || shExpMatch(host, "*taobao.com")) {
+    if (directMatch(url, host)) {
         return "DIRECT";
     }
 
-    return "PROXY loopbackAddress:8081; SOCKS loopbackAddress:8081; DIRECT";
+    return "PROXY %s:8081; SOCKS %s:8081; DIRECT";
 }

@@ -84,7 +84,7 @@ func getNextOriginOrder(id int64, price decimal.Decimal, gridIndex int) (record 
 }
 
 func getGridRecordByRobotId(robotId int64, limit int) (records []*GridRecord, ok bool) {
-	err := strategyDB.Select(&records, "SELECT * FROM gridRecordV2 WHERE robotId = ? AND isOrignOrder = TRUE AND status != 7 ORDER BY gridIndex DESC LIMIT ?", robotId, limit)
+	err := strategyDB.Select(&records, "SELECT * FROM gridRecordV2 WHERE robotId = ? AND isOrignOrder = TRUE AND status != 7 ORDER BY id LIMIT ?", robotId, limit)
 	if err != nil {
 		golog.Errorf("查询机器人[%d]的网格记录失败, Err: %v", robotId, err)
 		return

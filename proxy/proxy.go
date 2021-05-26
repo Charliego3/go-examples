@@ -1,40 +1,102 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	_ "embed"
 	"fmt"
+	"github.com/kataras/golog"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 )
 
 //go:embed proxy.pac
-var pac []byte
+var pac string
 
 func main() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	golog.SetLevel("debug")
+	golog.SetTimeFormat("2006-01-02 15:04:05.000")
+
 	l, err := net.Listen("tcp", ":8081")
 	if err != nil {
-		log.Panic(err)
+		golog.Error(err)
+		return
+	}
+
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		golog.Error("获取本机IP地址失败")
+		return
+	}
+
+	firstAddr := ""
+
+	for _, addr := range addrs {
+		if addr, ok := addr.(net.Addr); ok {
+			if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+				if ipnet.IP.To4() != nil && strings.HasPrefix(ipnet.IP.String(), "192.168") {
+					if firstAddr == "" {
+						firstAddr = ipnet.IP.String()
+					}
+					golog.Infof("http://%s:8082/pac", ipnet.IP.String())
+				}
+			}
+		}
+	}
+
+	dir, err := os.UserHomeDir()
+	if err != nil {
+		golog.Error("获取Home失败", err)
+		return
+	}
+
+	conf := filepath.Join(dir, ".vpn-proxy")
+	file, err := os.OpenFile(conf, os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		golog.Error("读取配置文件失败", err)
+		return
+	}
+
+	var exclude []string
+	reader := bufio.NewReader(file)
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil && err != io.EOF {
+			golog.Error("读取配置文件失败: ", err)
+			return
+		}
+
+		if err == io.EOF {
+			break
+		}
+		line = strings.TrimSuffix(line, "\n")
+		exclude = append(exclude, fmt.Sprintf("shExpMatch(host, \"%s\")", line))
+	}
+
+	file.Close()
+
+	if len(exclude) == 0 {
+		golog.Warnf("将需要排除的域名或IP配置在`%s`中, 按行分割")
 	}
 
 	go func() {
 		var one sync.Once
 		http.HandleFunc("/pac", func(w http.ResponseWriter, r *http.Request) {
-			proxyAutoConfig := bytes.ReplaceAll(pac, []byte("loopbackAddress"), []byte("192.168.1.20"))
-			w.Write(proxyAutoConfig)
+			proxyAutoConfig := fmt.Sprintf(pac, strings.Join(exclude, " || \n\t"), firstAddr, firstAddr)
+			w.Write([]byte(proxyAutoConfig))
 			one.Do(func() {
-				fmt.Printf("\n========== Proxy Auto-Config ==========\n%s\n=======================================\n", string(proxyAutoConfig))
+				fmt.Printf("========== Proxy Auto-Config ==========\n%s\n=======================================\n", proxyAutoConfig)
 			})
 		})
 		err := http.ListenAndServe(":8082", http.DefaultServeMux)
 		if err != nil {
-			log.Println(err)
+			golog.Error(err)
 			return
 		}
 	}()
@@ -42,7 +104,7 @@ func main() {
 	for {
 		client, err := l.Accept()
 		if err != nil {
-			log.Println("Accept error:", err)
+			golog.Error("Accept error:", err)
 			continue
 		}
 
@@ -53,7 +115,7 @@ func main() {
 func handleClientRequest(client net.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("Handle client request error:", err)
+			golog.Error("Handle client request error:", err)
 		}
 	}()
 	if client == nil {
@@ -64,7 +126,7 @@ func handleClientRequest(client net.Conn) {
 	var b [1024]byte
 	n, err := client.Read(b[:])
 	if err != nil {
-		log.Println(err)
+		golog.Errorf("[%s]Read Error: %+v", client.RemoteAddr().String(), err)
 		return
 	}
 	//log.Printf("Bytes: %s\n", b[:])
@@ -75,10 +137,10 @@ func handleClientRequest(client net.Conn) {
 	}
 	_, err = fmt.Sscanf(string(b[:indexByte]), "%s%s", &method, &host)
 	if err != nil {
-		log.Println("Scan host error:", err)
+		golog.Error("[%s]Scan host error: %+v", client.RemoteAddr().String(), err)
 		return
 	}
-	log.Printf("METHOD: %q, HOST: %q, ADDRESS: %q\n", method, host, address)
+	golog.Infof("METHOD: %*q, ADDRESS: %q, HOST: %q", 9, method, address, host)
 	if strings.Index(host, "http://") == 0 || strings.Index(host, "https://") == 0 {
 
 		// 解析POST请求参数
@@ -102,12 +164,12 @@ func handleClientRequest(client net.Conn) {
 		request, err := http.NewRequest(method, host, &body)
 		// resp, err := http.Get(host)
 		if err != nil {
-			log.Println("NewRequest error:", err)
+			golog.Error("NewRequest error:", err)
 			return
 		}
 		resp, err := http.DefaultClient.Do(request)
 		if err != nil {
-			log.Printf("Http.Do(%s) error: %s", method, err)
+			golog.Error("Http.Do(%s) error: %s", method, err)
 			return
 		}
 		io.Copy(client, resp.Body)
@@ -116,7 +178,7 @@ func handleClientRequest(client net.Conn) {
 	if !strings.Contains(host, ":") {
 		hostPortURL, err := url.Parse(host)
 		if err != nil {
-			log.Println(err)
+			golog.Error(err)
 			return
 		}
 
@@ -138,7 +200,7 @@ func handleClientRequest(client net.Conn) {
 	//获得了请求的host和port，就开始拨号吧
 	server, err := net.Dial("tcp", address)
 	if err != nil {
-		log.Println(err)
+		golog.Error(err)
 		return
 	}
 	if method == "CONNECT" {

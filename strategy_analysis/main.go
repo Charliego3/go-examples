@@ -182,11 +182,13 @@ func analysis(record *GridRecord, first bool) {
 		if !entrustOK {
 			entrustStatus = 2
 		} else {
-			prefix += fmt.Sprintf(", 委托挂单价格:[%s], 委托挂单数量:[%s]", colorWithAttribute(currentColor, entrust.UnitPrice.String()), entrust.Numbers.String())
+			prefix += fmt.Sprintf(", 委托挂单价格:[%s], 委托挂单数量:[%s], 挂单时间:[%s]", colorWithAttribute(currentColor, entrust.UnitPrice.String()), entrust.Numbers.String(), times.Parse2S(entrust.SubmitTime))
 			if entrust.CompleteNumber.Cmp(decimal.Zero) > 0 {
 				prefix += fmt.Sprintf(", 委托成交数量:[%s]", entrust.CompleteNumber.String())
 			}
-			prefix += fmt.Sprintf(", 挂单时间:[%s]", times.Parse2S(entrust.SubmitTime))
+			if entrust.FreezeId.Valid {
+				prefix += fmt.Sprintf(", 成交时间:[%s]", times.Parse2S(entrust.FreezeId.Int64))
+			}
 		}
 	}
 

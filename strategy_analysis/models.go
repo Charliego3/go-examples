@@ -83,6 +83,7 @@ type Robot struct {
 	TotalIncome      BigDecimal    `db:"totalIncome"`
 	Fee              BigDecimal    `db:"fee"`
 	FloatingIncome   BigDecimal    `db:"floatingIncome"`
+	IsBuy            []byte        `db:"isBuy"`
 }
 
 type Grid struct {
