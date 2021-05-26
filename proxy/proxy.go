@@ -115,7 +115,7 @@ func main() {
 func handleClientRequest(client net.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
-			golog.Error("Handle client request error:", err)
+			golog.Errorf("Handle client[%s] request error: %+v", client.RemoteAddr().String(), err)
 		}
 	}()
 	if client == nil {
