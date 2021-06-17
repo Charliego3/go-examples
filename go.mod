@@ -21,6 +21,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.3
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/kataras/golog v0.1.7
+	github.com/manifold/qtalk v0.1.0 // indirect
 	github.com/mattn/go-runewidth v0.0.12 // indirect
 	github.com/muesli/termenv v0.8.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -33,9 +34,9 @@ require (
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/webview/webview v0.0.0-20200724072439-e0c01595b361
 	github.com/whimthen/kits v1.0.2
-	golang.org/x/net v0.0.0-20210224082022-3d97a244fca7 // indirect
-	golang.org/x/sys v0.0.0-20210514084401-e8d321eab015 // indirect
+	golang.org/x/sys v0.0.0-20210601080250-7ecdf8ef093b // indirect
 	golang.org/x/text v0.3.5 // indirect
+	golang.org/x/tools v0.1.2 // indirect
 	google.golang.org/genproto v0.0.0-20210224155714-063164c882e6 // indirect
 	google.golang.org/grpc v1.36.0
 	google.golang.org/protobuf v1.26.0

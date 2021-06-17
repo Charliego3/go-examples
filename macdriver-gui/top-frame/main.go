@@ -62,7 +62,7 @@ func main() {
 		wv.SetValueForKey(core.False, core.String("drawsBackground"))
 
 		//url := core.URL(fmt.Sprintf("http://localhost:%d", ln.Addr().(*net.TCPAddr).Port))
-		url := core.URL("https://www.zb.center/cn/lever-kline/dot_qc")
+		url := core.URL("https://www.zb.today/cn/kline/dot_qc")
 		req := core.NSURLRequest_Init(url)
 		wv.LoadRequest(req)
 
