@@ -7,15 +7,11 @@ import (
 )
 
 type NSTableView struct {
-	objc.Object
+	cocoa.NSView
 }
 
 var NSTableView_ = objc.Get("NSTableView")
 
 func NSTableView_Init(frame core.NSRect) NSTableView {
-	return NSTableView{cocoa.NSView{Object: NSTableView_.Alloc().Send("initWithFrame:", frame)}}
-}
-
-func NSTableView_New() NSTableView {
-	return NSTableView{NSTableView_.Alloc().Init()}
+	return NSTableView{NSView: cocoa.NSView{Object: NSTableView_.Alloc().Send("initWithFrame:", frame)}}
 }

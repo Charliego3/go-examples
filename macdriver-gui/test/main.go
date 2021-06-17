@@ -14,7 +14,7 @@ func main() {
 	app := cocoa.NSApp_WithDidLaunch(func(notification objc.Object) {
 		initStatusMenuBar()
 
-		tableView := NSTableView_New()
+		tableView := NSTableView_Init(core.Rect(0, 0, 100, 200))
 		//tableView.Send("draw:", nil)
 
 		w := cocoa.NSWindow_Init(
@@ -31,16 +31,20 @@ func main() {
 		view := cocoa.NSView_Init(core.Rect(0, 0, 500, 300))
 		view.AddSubviewPositionedRelativeTo(objc.Get("NSTextField").Alloc().Init(), 0, nil)
 		view.AddSubviewPositionedRelativeTo(tableView, 1, nil)
-		w.SetContentView(view)
 
+		textView := cocoa.NSTextView_Init(core.Rect(0, 0, 500, w.Frame().Size.Height-29))
+		textView.SetSelectable(true)
+		textView.SetString("test")
+
+		w.SetContentView(tableView)
 		w.SetTitleVisibility(cocoa.NSWindowTitleHidden)
 		w.SetTitlebarAppearsTransparent(true)
 		w.SetIgnoresMouseEvents(false)
 		w.SetMovableByWindowBackground(false)
-		w.SetLevel(0)
+		//w.SetLevel(0)
 		w.SetBackgroundColor(cocoa.NSColor_Init(46, 81, 133, 1))
 		w.SetTitle("NSTableView")
-		w.MakeKeyAndOrderFront(view)
+		w.MakeKeyAndOrderFront(tableView)
 		w.SetCollectionBehavior(cocoa.NSWindowCollectionBehaviorDefault)
 		w.Center()
 	})
