@@ -10,6 +10,8 @@ require (
 	github.com/alecthomas/chroma v0.8.2
 	github.com/caseymrm/menuet v1.0.1
 	github.com/dlclark/regexp2 v1.4.0 // indirect
+	github.com/extrame/ole2 v0.0.0-20160812065207-d69429661ad7 // indirect
+	github.com/extrame/xls v0.0.1 // indirect
 	github.com/fatih/color v1.9.0
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gen2brain/dlgs v0.0.0-20201118155338-03fe7f81ad25

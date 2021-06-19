@@ -63,8 +63,8 @@ func main() {
 	//answer, err := dlgs.Question("Question", "Are you sure you want to format this media?", true)
 	//println(answer, err)
 
-	//file, b, err := dlgs.File("Select a csv", ".csv", false)
-	//println(file, b, err)
+	file, b, err := dlgs.File("Select a csv", "", false)
+	println(file, b, err)
 
 	//file, b, err := dlgs.FileMulti("Select a csv", ".csv")
 	//fmt.Printf("%v, %v, %v", file, b, err)
@@ -81,7 +81,7 @@ func main() {
 	//b, err := dlgs.Info("Info Title", "Info Text")
 	//fmt.Printf("%v, %v", b, err)
 
-	b, err := dlgs.Warning("Warning Title", "Warning Text")
+	b, err = dlgs.Warning("Warning Title", "Warning Text")
 	fmt.Printf("%v, %v", b, err)
 
 	b, err = dlgs.Error("Error Title", "Error Text")
