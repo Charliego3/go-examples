@@ -12,6 +12,6 @@ type NSTableView struct {
 
 var NSTableView_ = objc.Get("NSTableView")
 
-func NSTableView_Init(frame core.NSRect) NSTableView {
-	return NSTableView{NSView: cocoa.NSView{Object: NSTableView_.Alloc().Send("initWithFrame:", &frame)}}
+func NewNSTableView(frame core.NSRect) NSTableView {
+	return NSTableView{NSView: cocoa.NSView{Object: NSTableView_.Alloc().Send("initWithFrame:", frame)}}
 }

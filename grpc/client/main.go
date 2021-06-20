@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"google.golang.org/grpc/credentials"
 	"log"
 	"os"
 	"time"
@@ -11,16 +12,28 @@ import (
 )
 
 const (
-	address     = "localhost:9091"
+	address     = "127.0.0.1:9091"
 	defaultName = "world"
 )
 
 func main() {
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+	//conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+	//if err != nil {
+	//	log.Fatalf("did not connect: %v", err)
+	//}
+
+	// Set up a connection to the server.
+	cred, err := credentials.NewClientTLSFromFile("../../server.crt", "localhost")
+	if err != nil {
+		log.Fatal(err)
+	}
+	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(cred), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
+	log.Println("Dial end")
+
 	defer conn.Close()
 	c := pb.NewGreeterClient(conn)
 

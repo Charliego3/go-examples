@@ -1,4 +1,4 @@
-package main
+package widgets
 
 import (
 	"github.com/progrium/macdriver/cocoa"
@@ -7,17 +7,21 @@ import (
 )
 
 type NSTextField struct {
-	objc.Object
+	cocoa.NSView
 }
 
 var NSTextField_ = objc.Get("NSTextField")
 
-func NSTextField_Init(frame core.NSRect) NSTextField {
-	return NSTextField{NSTextField_.Alloc().Send("initWithFrame:", &frame)}
+func NewNSTextField(frame core.NSRect) NSTextField {
+	return NSTextField{NSView: cocoa.NSView{Object: NSTextField_.Alloc().Send("initWithFrame:", frame)}}
 }
 
 func (t NSTextField) SetBackgroundColor(color cocoa.NSColor) {
 	t.Set("backgroundColor:", &color)
+}
+
+func (t NSTextField) SetIsBordered(isBordered bool) {
+	t.Set("bordered:", isBordered)
 }
 
 func (t NSTextField) SetStringValue(val string) {

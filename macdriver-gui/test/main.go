@@ -6,48 +6,10 @@ import (
 	"github.com/progrium/macdriver/cocoa"
 	"github.com/progrium/macdriver/core"
 	"github.com/progrium/macdriver/objc"
+	"github.com/whimthen/temp/macdriver-gui/widgets"
 	"runtime"
 	"time"
 )
-
-type NSAlert struct {
-	objc.Object
-}
-
-var NSAlert_ = objc.Get("NSAlert")
-var NSAlertFirstButtonReturn_ = objc.Get("NSAlertFirstButtonReturn")
-
-func NewNSAlert() NSAlert {
-	return NSAlert{NSAlert_.Alloc().Init()}
-}
-
-func (i NSAlert) MessageText() string {
-	return i.Get("messageText").String()
-}
-
-func (i NSAlert) SetMessageText(s string) {
-	i.Set("messageText:", core.String(s))
-}
-
-func (i NSAlert) InformativeText() string {
-	return i.Get("informativeText").String()
-}
-
-func (i NSAlert) SetInformativeText(s string) {
-	i.Set("informativeText:", core.String(s))
-}
-
-func (i NSAlert) AddButtonWithTitle(s string) {
-	i.Send("addButtonWithTitle:", core.String(s))
-}
-
-func (i NSAlert) Show() objc.Object {
-	return i.Send("runModal")
-}
-
-func (i NSAlert) BeginSheetModalForWindow(win cocoa.NSWindow, callback func(resp objc.Object)) objc.Object {
-	return i.Send("beginSheetModalForWindow:completionHandler:", &win, callback)
-}
 
 func main() {
 	golog.SetLevel("debug")
@@ -56,8 +18,9 @@ func main() {
 	app := cocoa.NSApp_WithDidLaunch(func(notification objc.Object) {
 		initStatusMenuBar()
 
-		tableView := NSTableView_Init(core.Rect(0, 0, 100, 200))
+		tableView := NewNSTableView(core.Rect(0, 0, 100, 200))
 		//tableView.Send("draw:", nil)
+		_ = tableView
 
 		w := cocoa.NSWindow_Init(
 			core.Rect(0, 0, 600, 665),
@@ -65,31 +28,34 @@ func main() {
 				cocoa.NSResizableWindowMask|
 				cocoa.NSMiniaturizableWindowMask|
 				cocoa.NSFullSizeContentViewWindowMask|
+				cocoa.NSTexturedBackgroundWindowMask|
 				cocoa.NSTitledWindowMask,
-			cocoa.NSBackingStoreBuffered,
-			true,
+			cocoa.NSBackingStoreRetained,
+			false,
 		)
 
-		textField := NSTextField_Init(core.Rect(10, 100, 100, 40))
-		//textField.SetBackgroundColor(cocoa.Color(206, 85, 33, 1))
+		textField := widgets.NewNSTextField(core.Rect(10, 200, 100, 40))
+		textField.SetBackgroundColor(cocoa.Color(206, 85, 33, 1))
 		textField.SetStringValue("TextFieldTest")
+		textField.SetIsBordered(true)
 		textField.Set("placeholderString:", core.String("PlaceholderString"))
 		textField.Set("drawsBackground:", true)
 
-		textView := cocoa.NSTextView_Init(core.Rect(10, 220, 300, 100))
+		textView := cocoa.NSTextView_Init(core.Rect(0, 320, 300, 100))
 		textView.SetSelectable(true)
 		textView.SetString("test")
 
 		rect := core.Rect(0, 0, 600, 665)
 		view := cocoa.NSView_Init(rect)
-		//view.Send("addSubview:", &tableView)
-		//view.Send("addSubview:", &textView)
-		//view.Send("addSubview:", &textField)
 		view.SetWantsLayer(true)
-		view.Layer().SetCornerRadius(32.0)
-		view.AddSubviewPositionedRelativeTo(textField, cocoa.NSWindowBelow, nil)
-		view.AddSubviewPositionedRelativeTo(textView, cocoa.NSWindowBelow, nil)
-		view.AddSubviewPositionedRelativeTo(tableView, cocoa.NSWindowAbove, nil)
+		view.Send("addSubview:", &tableView)
+		view.Send("addSubview:", &textView)
+		view.Send("addSubview:", &textField)
+		//view.SetWantsLayer(true)
+		//view.Layer().SetCornerRadius(32.0)
+		//view.AddSubviewPositionedRelativeTo(textField, cocoa.NSWindowBelow, nil)
+		//view.AddSubviewPositionedRelativeTo(textView, cocoa.NSWindowBelow, nil)
+		//view.AddSubviewPositionedRelativeTo(tableView, cocoa.NSWindowAbove, nil)
 		//view.Send("draw:", &rect)
 		//view.AddSubviewPositionedRelativeTo(tableView, 1, w)
 
@@ -99,12 +65,13 @@ func main() {
 		w.SetIgnoresMouseEvents(false)
 		w.SetMovableByWindowBackground(false)
 		w.SetBackgroundColor(cocoa.NSColor_Init(46, 81, 133, 1))
+		w.SetLevel(0)
 		w.SetTitle("NSTableView")
 		w.MakeKeyAndOrderFront(view)
-		w.SetCollectionBehavior(cocoa.NSWindowCollectionBehaviorDefault)
+		w.SetCollectionBehavior(cocoa.NSWindowCollectionBehaviorCanJoinAllSpaces)
 		w.Center()
 
-		alert := NewNSAlert()
+		alert := widgets.NewNSAlert()
 		alert.SetMessageText("Alert message")
 		alert.SetInformativeText("Detailed description of alert message")
 		alert.AddButtonWithTitle("Default")
@@ -113,6 +80,7 @@ func main() {
 		alert.BeginSheetModalForWindow(w, func(resp objc.Object) {
 			println(resp)
 		})
+		//alert.Show()
 	})
 
 	itemQuit := cocoa.NSMenuItem_New()
@@ -129,7 +97,7 @@ func main() {
 }
 
 func ShowAlert(win objc.Object) {
-	alert := NewNSAlert()
+	alert := widgets.NewNSAlert()
 	alert.SetMessageText("Alert message")
 	alert.SetInformativeText("Detailed description of alert message")
 	alert.AddButtonWithTitle("Default")
