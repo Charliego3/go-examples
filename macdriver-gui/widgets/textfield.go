@@ -10,10 +10,10 @@ type NSTextField struct {
 	cocoa.NSView
 }
 
-var NSTextField_ = objc.Get("NSTextField")
+var nsTextField_ = objc.Get("NSTextField")
 
 func NewNSTextField(frame core.NSRect) NSTextField {
-	return NSTextField{NSView: cocoa.NSView{Object: NSTextField_.Alloc().Send("initWithFrame:", frame)}}
+	return NSTextField{NSView: cocoa.NSView{Object: nsTextField_.Alloc().Send("initWithFrame:", frame)}}
 }
 
 func (t NSTextField) SetBackgroundColor(color cocoa.NSColor) {

@@ -17,6 +17,7 @@ require (
 	github.com/gen2brain/dlgs v0.0.0-20201118155338-03fe7f81ad25
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-vgo/robotgo v0.90.3
+	github.com/golang/protobuf v1.5.0
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gotk3/gotk3 v0.5.1
 	github.com/jmoiron/sqlx v1.3.3
@@ -24,10 +25,13 @@ require (
 	github.com/kataras/golog v0.1.7
 	github.com/manifold/qtalk v0.1.0 // indirect
 	github.com/mattn/go-runewidth v0.0.12 // indirect
+	github.com/mitchellh/mapstructure v1.4.0 // indirect
 	github.com/muesli/termenv v0.8.1
 	github.com/pkg/errors v0.9.1
-	github.com/progrium/macdriver v0.0.0-20210209011743-cc510679fe06
+	github.com/progrium/macdriver v0.1.0
+	github.com/progrium/watcher v1.0.7 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/rs/xid v1.2.1 // indirect
 	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.0.0

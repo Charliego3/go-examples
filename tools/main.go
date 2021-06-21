@@ -54,9 +54,46 @@ func initStatusMenuBar() {
 	menu := cocoa.NSMenu_New()
 	menu.AddItem(itemAlert)
 	menu.AddItem(html2csv())
+	menu.AddItem(openWindow())
 	menu.AddItem(cocoa.NSMenuItem_Separator())
 	menu.AddItem(itemQuit)
 	obj.SetMenu(menu)
+}
+
+func openWindow() cocoa.NSMenuItem {
+	call, selector := core.Callback(func(objc.Object) {
+		//window := cocoa.NSWindow_New()
+		window := cocoa.NSWindow_Init(
+			core.Rect(0, 0, 600, 665),
+			cocoa.NSClosableWindowMask|
+				cocoa.NSResizableWindowMask|
+				cocoa.NSMiniaturizableWindowMask|
+				cocoa.NSFullSizeContentViewWindowMask|
+				cocoa.NSTexturedBackgroundWindowMask|
+				cocoa.NSTitledWindowMask,
+			cocoa.NSBackingStoreBuffered,
+			false,
+		)
+		window.SetHasShadow(true)
+		window.SetTitlebarAppearsTransparent(true)
+
+		rect := core.Rect(0, 0, 600, 665)
+		view := cocoa.NSView_Init(rect)
+
+		window.SetContentView(view)
+		window.SetTitleVisibility(cocoa.NSWindowTitleHidden)
+		window.SetIgnoresMouseEvents(false)
+		window.SetMovableByWindowBackground(false)
+		window.SetLevel(0)
+		window.MakeKeyAndOrderFront(view)
+		window.SetCollectionBehavior(cocoa.NSWindowCollectionBehaviorCanJoinAllSpaces)
+		window.Center()
+	})
+	openWin := cocoa.NSMenuItem_New()
+	openWin.SetTitle("Open new Window")
+	openWin.SetAction(selector)
+	openWin.SetTarget(call)
+	return openWin
 }
 
 func html2csv() cocoa.NSMenuItem {

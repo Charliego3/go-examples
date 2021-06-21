@@ -30,12 +30,27 @@ func main() {
 				cocoa.NSFullSizeContentViewWindowMask|
 				cocoa.NSTexturedBackgroundWindowMask|
 				cocoa.NSTitledWindowMask,
-			cocoa.NSBackingStoreRetained,
+			cocoa.NSBackingStoreBuffered,
 			false,
 		)
 
-		textField := widgets.NewNSTextField(core.Rect(10, 200, 100, 40))
-		textField.SetBackgroundColor(cocoa.Color(206, 85, 33, 1))
+		tfRect := core.Rect(10, 200, 200, 21)
+		textField := widgets.NewNSTextField(tfRect)
+		//textField.SetBackgroundColor(cocoa.Color(206, 85, 33, 1))
+		//textField.Set("bezelStyle:", objc.Get("NSTextFieldRoundedBezel"))
+		//textField.Set("drawsBackground:", true)
+		//textField.SetWantsLayer(true)
+		//textField.Layer().SetCornerRadius(5)
+		//textField.Layer().Set("borderWidth:", 2)
+		//textField.Layer().Set("masksToBounds:", true)
+		//inView := cocoa.NSView_Init(tfRect)
+		//inView.Set("")
+		//textField.Send("drawWithFrame:inView:", tfRect, nil)
+
+		sfRect := core.Rect(10, 100, 200, 21)
+		searchField := widgets.NewNSSearchField(sfRect)
+		searchField.SetRecentSearches("abc", "ddd", "TextField")
+
 		textField.SetStringValue("TextFieldTest")
 		textField.SetIsBordered(true)
 		textField.Set("placeholderString:", core.String("PlaceholderString"))
@@ -50,6 +65,7 @@ func main() {
 		view.SetWantsLayer(true)
 		view.Send("addSubview:", &tableView)
 		view.Send("addSubview:", &textView)
+		view.Send("addSubview:", &searchField)
 		view.Send("addSubview:", &textField)
 		//view.SetWantsLayer(true)
 		//view.Layer().SetCornerRadius(32.0)
@@ -64,22 +80,23 @@ func main() {
 		w.SetTitlebarAppearsTransparent(true)
 		w.SetIgnoresMouseEvents(false)
 		w.SetMovableByWindowBackground(false)
-		w.SetBackgroundColor(cocoa.NSColor_Init(46, 81, 133, 1))
+		//w.SetBackgroundColor(cocoa.NSColor_Init(46, 81, 133, 1))
+		//w.SetBackgroundColor(cocoa.NSColor_Clear())
 		w.SetLevel(0)
 		w.SetTitle("NSTableView")
 		w.MakeKeyAndOrderFront(view)
 		w.SetCollectionBehavior(cocoa.NSWindowCollectionBehaviorCanJoinAllSpaces)
 		w.Center()
 
-		alert := widgets.NewNSAlert()
-		alert.SetMessageText("Alert message")
-		alert.SetInformativeText("Detailed description of alert message")
-		alert.AddButtonWithTitle("Default")
-		alert.AddButtonWithTitle("Alternative")
-		alert.AddButtonWithTitle("Other")
-		alert.BeginSheetModalForWindow(w, func(resp objc.Object) {
-			println(resp)
-		})
+		//alert := widgets.NewNSAlert()
+		//alert.SetMessageText("Alert message")
+		//alert.SetInformativeText("Detailed description of alert message")
+		//alert.AddButtonWithTitle("Default")
+		//alert.AddButtonWithTitle("Alternative")
+		//alert.AddButtonWithTitle("Other")
+		//alert.BeginSheetModalForWindow(w, func(resp objc.Object) {
+		//	println(resp)
+		//})
 		//alert.Show()
 	})
 

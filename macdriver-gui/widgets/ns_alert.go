@@ -10,10 +10,10 @@ type NSAlert struct {
 	objc.Object
 }
 
-var NSAlert_ = objc.Get("NSAlert")
+var nsAlert_ = objc.Get("NSAlert")
 
 func NewNSAlert() NSAlert {
-	return NSAlert{NSAlert_.Alloc().Init()}
+	return NSAlert{nsAlert_.Alloc().Init()}
 }
 
 func (i NSAlert) MessageText() string {
