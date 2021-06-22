@@ -7,6 +7,7 @@ import (
 	"github.com/progrium/macdriver/core"
 	"github.com/progrium/macdriver/objc"
 	"github.com/whimthen/temp/macdriver-gui/widgets"
+	"github.com/whimthen/temp/macdriver-gui/widgets/alert"
 	"runtime"
 	"time"
 )
@@ -22,15 +23,16 @@ func main() {
 		//tableView.Send("draw:", nil)
 		_ = tableView
 
+		wRect := core.Rect(0, 0, 600, 665)
 		w := cocoa.NSWindow_Init(
-			core.Rect(0, 0, 600, 665),
+			wRect,
 			cocoa.NSClosableWindowMask|
 				cocoa.NSResizableWindowMask|
 				cocoa.NSMiniaturizableWindowMask|
+				//cocoa.NSTexturedBackgroundWindowMask|
 				cocoa.NSFullSizeContentViewWindowMask|
-				cocoa.NSTexturedBackgroundWindowMask|
 				cocoa.NSTitledWindowMask,
-			cocoa.NSBackingStoreBuffered,
+			cocoa.NSBackingStoreRetained,
 			false,
 		)
 
@@ -75,6 +77,8 @@ func main() {
 		//view.Send("draw:", &rect)
 		//view.AddSubviewPositionedRelativeTo(tableView, 1, w)
 
+		w.Send("setMinSize:", core.Size(300, 300))
+		w.Send("setContentMinSize:", core.Size(300, 300))
 		w.SetContentView(view)
 		w.SetTitleVisibility(cocoa.NSWindowTitleHidden)
 		w.SetTitlebarAppearsTransparent(true)
@@ -114,17 +118,15 @@ func main() {
 }
 
 func ShowAlert(win objc.Object) {
-	alert := widgets.NewNSAlert()
+	alert := alert.NewNSAlert()
 	alert.SetMessageText("Alert message")
 	alert.SetInformativeText("Detailed description of alert message")
 	alert.AddButtonWithTitle("Default")
 	alert.AddButtonWithTitle("Alternative")
 	alert.AddButtonWithTitle("Other")
 
-	alert.Show()
-	//alertResp := alert.BeginSheetModalForWindow(win.(cocoa.NSWindow))
-	//println(alertResp.Pointer())
-	//println(NSAlertFirstButtonReturn_.Pointer())
+	//alert.Show()
+	alert.BeginSheetModalForWindow(win.(cocoa.NSWindow))
 }
 
 func initStatusMenuBar() {

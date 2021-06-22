@@ -5,14 +5,19 @@ import (
 	"github.com/progrium/macdriver/core"
 	"github.com/progrium/macdriver/objc"
 	"github.com/whimthen/temp/macdriver-gui/widgets"
+	"github.com/whimthen/temp/macdriver-gui/widgets/alert"
 	"runtime"
 )
 
+func init() {
+}
+
 func main() {
+	cocoa.TerminateAfterWindowsClose = false
 	runtime.LockOSThread()
 	app := cocoa.NSApp_WithDidLaunch(func(notification objc.Object) {
 		initStatusMenuBar()
-		initEmptyWin()
+		//initEmptyWin()
 	})
 
 	app.SetActivationPolicy(cocoa.NSApplicationActivationPolicyAccessory)
@@ -88,6 +93,21 @@ func openWindow() cocoa.NSMenuItem {
 		window.MakeKeyAndOrderFront(view)
 		window.SetCollectionBehavior(cocoa.NSWindowCollectionBehaviorCanJoinAllSpaces)
 		window.Center()
+
+
+		nsAlert := alert.NewNSAlert_WithSheetModal(window, func(resp objc.Object) {
+			println(resp)
+		})
+		nsAlert.SetAlertStyle(alert.Critical)
+		nsAlert.SetMessageText("Alert message")
+		nsAlert.SetInformativeText("Detailed description of nsAlert message")
+		nsAlert.AddButtonWithTitle("Default")
+		nsAlert.AddButtonWithTitle("Alternative")
+		nsAlert.AddButtonWithTitle("Other")
+		//nsAlert.Send("showSheetModalForWindow")
+		//nsAlert.Show()
+		//sel := objc.Sel("buttonAction:")
+		nsAlert.Send("beginSheetModalForWindow:completionHandler:", &window, core.String("buttonAction:"))
 	})
 	openWin := cocoa.NSMenuItem_New()
 	openWin.SetTitle("Open new Window")
@@ -119,11 +139,14 @@ func OpenFileSelection() {
 }
 
 func ShowAlert(objc.Object) {
-	alert := widgets.NewNSAlert()
-	alert.SetMessageText("Alert message")
-	alert.SetInformativeText("Detailed description of alert message")
-	alert.AddButtonWithTitle("Default")
-	alert.AddButtonWithTitle("Alternative")
-	alert.AddButtonWithTitle("Other")
-	alert.Show()
+	nsAlert := alert.NewNSAlert()
+	nsAlert.SetAlertStyle(alert.Informational)
+	nsAlert.SetShowsHelp(true)
+	nsAlert.Set("helpAnchor:", core.String("www.baidu.com"))
+	nsAlert.SetMessageText("Alert message")
+	nsAlert.SetInformativeText("Detailed description of nsAlert message")
+	nsAlert.AddButtonWithTitle("Default")
+	nsAlert.AddButtonWithTitle("Alternative")
+	nsAlert.AddButtonWithTitle("Other")
+	nsAlert.Show()
 }
