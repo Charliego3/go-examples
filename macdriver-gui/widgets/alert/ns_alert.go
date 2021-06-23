@@ -9,7 +9,7 @@ import (
 var (
 	nsAlert_ = objc.Get("NSAlert")
 
-	nsAlertController objc.Object
+	nsAlertController      objc.Object
 	nsAlertControllerClass objc.Class
 )
 
@@ -81,6 +81,21 @@ func (i NSAlert) AddButtonWithTitle(s string) {
 	i.Send("addButtonWithTitle:", core.String(s))
 }
 
+func (i NSAlert) SetShowsSuppressionButton(suppression bool) {
+	i.Set("showsSuppressionButton:", suppression)
+}
+
+func (i NSAlert) SetSuppressionButtonTitle(title string) {
+	btn := i.Get("suppressionButton")
+	if btn != nil {
+		btn.Set("title:", core.String(title))
+	}
+}
+
+func (i NSAlert) SetIcon(icon cocoa.NSImage) {
+	i.Set("icon:", &icon)
+}
+
 func (i NSAlert) Show() objc.Object {
 	return i.Send("runModal")
 }
@@ -92,20 +107,4 @@ func (i NSAlert) BeginSheetModalForWindow(win cocoa.NSWindow) objc.Object {
 	_ = callback
 	_ = selector
 	return i.Delegate().Send("beginSheetModalForWindow:", &win)
-}
-
-func NewNSAlert_WithSheetModal(win cocoa.NSWindow, callback func(resp objc.Object)) NSAlert {
-	alert := NSAlert{nsAlert_.Alloc().Init()}
-	//nsAlertControllerClass.AddMethod("showSheetModalForWindow:", func(a objc.Object) {
-	//	if nsAlert, ok := a.(NSAlert); ok {
-	//		//obj := nsAlert.BeginSheetModalForWindow(win)
-	//		//callback(obj)
-	//		fmt.Printf("%v\n", nsAlert)
-	//	}
-	//})
-	//alert.SetDelegate(nsAlertController)
-	alert.Object.Class().AddMethod("buttonAction:", func(r objc.Object) {
-		println("buttonAction:::::", r)
-	})
-	return alert
 }

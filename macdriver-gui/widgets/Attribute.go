@@ -1,0 +1,27 @@
+package widgets
+
+type NSLayoutConstraintAttribute uint
+
+const (
+	NSLayoutConstraintAttributeNotAnAttribute NSLayoutConstraintAttribute = iota
+	NSLayoutConstraintAttributeLeft
+	NSLayoutConstraintAttributeRight
+	NSLayoutConstraintAttributeTop
+	NSLayoutConstraintAttributeBottom
+	NSLayoutConstraintAttributeLeading
+	NSLayoutConstraintAttributeTrailing
+	NSLayoutConstraintAttributeWidth
+	NSLayoutConstraintAttributeHeight
+	NSLayoutConstraintAttributeCenterX
+	NSLayoutConstraintAttributeCenterY
+	NSLayoutConstraintAttributeLastBaseline
+	NSLayoutConstraintAttributeFirstBaseline
+	NSLayoutConstraintAttributeLeftMargin
+	NSLayoutConstraintAttributeRightMargin
+	NSLayoutConstraintAttributeTopMargin
+	NSLayoutConstraintAttributeBottomMargin
+	NSLayoutConstraintAttributeLeadingMargin
+	NSLayoutConstraintAttributeTrailingMargin
+	NSLayoutConstraintAttributeCenterXWithinMargins
+	NSLayoutConstraintAttributeCenterYWithinMargins
+)

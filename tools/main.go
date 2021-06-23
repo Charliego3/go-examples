@@ -57,12 +57,13 @@ func initStatusMenuBar() {
 	itemQuit.SetAction(objc.Sel("terminate:"))
 
 	menu := cocoa.NSMenu_New()
+	obj.SetMenu(menu)
+
 	menu.AddItem(itemAlert)
 	menu.AddItem(html2csv())
 	menu.AddItem(openWindow())
 	menu.AddItem(cocoa.NSMenuItem_Separator())
 	menu.AddItem(itemQuit)
-	obj.SetMenu(menu)
 }
 
 func openWindow() cocoa.NSMenuItem {
@@ -94,10 +95,7 @@ func openWindow() cocoa.NSMenuItem {
 		window.SetCollectionBehavior(cocoa.NSWindowCollectionBehaviorCanJoinAllSpaces)
 		window.Center()
 
-
-		nsAlert := alert.NewNSAlert_WithSheetModal(window, func(resp objc.Object) {
-			println(resp)
-		})
+		nsAlert := alert.NewNSAlert()
 		nsAlert.SetAlertStyle(alert.Critical)
 		nsAlert.SetMessageText("Alert message")
 		nsAlert.SetInformativeText("Detailed description of nsAlert message")
