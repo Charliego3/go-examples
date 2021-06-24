@@ -15,7 +15,7 @@ type NSButton struct {
 }
 
 func NewButtonWithFrame(frame core.NSRect) NSButton {
-	return NSButton{cocoa.NSView{nsButton.Alloc().Send("initWithFrame:", frame)}}
+	return NSButton{NSView: cocoa.NSView{Object: nsButton.Alloc().Send("initWithFrame:", frame)}}
 }
 
 func (b NSButton) SetTitle(title string) {
@@ -24,6 +24,10 @@ func (b NSButton) SetTitle(title string) {
 
 func (b NSButton) SetType() {
 	b.Send("setButtonType:", core.NSUInteger(0))
+}
+
+func (b NSButton) SetBorderType(border BezelStyle) {
+	b.Set("bezelStyle:", core.NSUInteger(border))
 }
 
 func (b NSButton) SetAction(action func(object objc.Object)) {

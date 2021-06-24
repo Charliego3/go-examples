@@ -4,6 +4,7 @@ import (
 	"github.com/progrium/macdriver/cocoa"
 	"github.com/progrium/macdriver/core"
 	"github.com/progrium/macdriver/objc"
+	"github.com/whimthen/temp/macdriver-gui/widgets"
 	"github.com/whimthen/temp/macdriver-gui/widgets/button"
 	"runtime"
 )
@@ -69,7 +70,14 @@ func (i NSAlert) BeginSheetModalForWindow(win cocoa.NSWindow) objc.Object {
 func main() {
 	runtime.LockOSThread()
 	app := cocoa.NSApp_WithDidLaunch(wenAppLaunch)
-	app.SetActivationPolicy(cocoa.NSApplicationActivationPolicyAccessory)
+	app.Retain()
+
+	itemQuit := cocoa.NSMenuItem_Init("Quit", objc.Sel("terminate:"), "")
+	menu := cocoa.NSMenu_Init("MenuInit")
+	menu.AddItem(itemQuit)
+	app.SetMainMenu(menu)
+
+	app.SetActivationPolicy(cocoa.NSApplicationActivationPolicyRegular)
 	app.ActivateIgnoringOtherApps(true)
 	app.Run()
 }
@@ -88,25 +96,57 @@ func wenAppLaunch(notification objc.Object) {
 	window.SetHasShadow(true)
 
 	rect := core.Rect(0, 0, 600, 665)
-	view := cocoa.NSView_Init(rect)
-	view.Set("setTranslatesAutoresizingMaskIntoConstraints:", false)
+	rootView := cocoa.NSView_Init(rect)
+	//rootView.Set("setTranslatesAutoresizingMaskIntoConstraints:", false)
+
+	subView := cocoa.NSView_Init(rect)
+
+	rootView.Send("addSubview:", &subView)
+	topConstraint := widgets.NewNSLayoutConstraint()
+	//topConstraint.SetConstraintWithItem(subView, widgets.NSLayoutConstraintAttributeTop, widgets.NSLayoutConstraintRelationLessEqual, rootView, widgets.NSLayoutConstraintAttributeBottom, 1.0, 40)
+	rootView.Send("addConstraints:", core.NSArray_WithObjects(topConstraint))
+	//rootView.AddSubviewPositionedRelativeTo(subView, 3, rootView)
 
 	nsButton := button.NSButton{NSView: cocoa.NSView{Object: objc.Get("NSButton").Alloc().Init()}}
 	nsButton.Set("title:", core.String("titled button"))
-	nsButton.Set("")
-	view.Send("addSubview:", &nsButton)
+	subView.Send("addSubview:", &nsButton)
+
+	btn1 := button.NewButtonWithFrame(core.Rect(100, 150, 200, 22))
+	btn1.SetTitle("Change Title")
+	btn1.SetBorderType(button.BezelStyleRounded)
+	btn1.SetType()
+	btn1.SetAction(func(object objc.Object) {
+		//rect := core.NSRect{
+		//	Origin: core.NSPoint{100, 200},
+		//	Size:   core.NSSize{400, 25},
+		//}
+		btn1.SetTitle("Changed Title With Action")
+		//btn1.Set("frame:", rect)
+	})
+	subView.Send("addSubview:", &btn1)
 
 	btn := button.NewButtonWithFrame(core.Rect(100, 100, 200, 22))
 	btn.SetTitle("Show Alert with sheet modal")
+	btn.SetBorderType(button.BezelStyleRounded)
 	btn.SetType()
 	btn.SetAction(func(object objc.Object) {
 		showAlertWithSheet(window)
 	})
-	view.Send("addSubview:", &btn)
+	subView.Send("addSubview:", &btn)
+
+	disclosure := button.NewButtonWithFrame(core.Rect(100, 50, 200, 22))
+	disclosure.SetTitle("")
+	disclosure.SetBorderType(button.BezelStyleDisclosure)
+	disclosure.SetType()
+	disclosure.SetAction(func(obj objc.Object) {
+		//state := objc.Get("NSControl.StateValue")
+		//obj.Set("state:", state)
+	})
+	subView.Send("addSubview:", &disclosure)
 
 	window.SetTitle("Test sheet modal alert")
-	window.SetContentView(view)
-	window.MakeKeyAndOrderFront(view)
+	window.SetContentView(rootView)
+	window.MakeKeyAndOrderFront(rootView)
 	window.Center()
 }
 

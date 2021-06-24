@@ -1,6 +1,9 @@
 package widgets
 
-import "github.com/progrium/macdriver/objc"
+import (
+	"github.com/progrium/macdriver/core"
+	"github.com/progrium/macdriver/objc"
+)
 
 type NSLayoutConstraint struct {
 	objc.Object
@@ -10,8 +13,11 @@ func NewNSLayoutConstraint() NSLayoutConstraint {
 	return NSLayoutConstraint{Object: objc.Get("NSLayoutConstraint").Alloc().Init()}
 }
 
-func (c NSLayoutConstraint) SetConstraintWithItem(subView objc.Object, attribute NSLayoutConstraintAttribute) {
-
+func (c NSLayoutConstraint) SetConstraintWithItem(subView objc.Object, subAttribute NSLayoutConstraintAttribute, relation NSLayoutConstraintRelation,
+	toItem objc.Object, toAttribute NSLayoutConstraintAttribute, multiplier float64, constant float64) {
+	c.Set("constraintWithItem:attribute:relatedBy:toItem:attribute:multiplier:constant:",
+		&subView, core.NSUInteger(subAttribute), core.NSUInteger(relation), &toItem, core.NSUInteger(toAttribute), multiplier, constant,
+	)
 }
 
 //- (void)viewDidLoad {

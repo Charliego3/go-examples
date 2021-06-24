@@ -1,6 +1,7 @@
 package widgets
 
 type NSLayoutConstraintAttribute uint
+type NSLayoutConstraintRelation uint
 
 const (
 	NSLayoutConstraintAttributeNotAnAttribute NSLayoutConstraintAttribute = iota
@@ -24,4 +25,10 @@ const (
 	NSLayoutConstraintAttributeTrailingMargin
 	NSLayoutConstraintAttributeCenterXWithinMargins
 	NSLayoutConstraintAttributeCenterYWithinMargins
+)
+
+const (
+	//NSLayoutConstraintRelationLessThanOrEqual NSLayoutConstraintRelation = iota - 1
+	NSLayoutConstraintRelationLessEqual              = 0
+	NSLayoutConstraintRelationLessGreaterThanOrEqual = 1
 )
