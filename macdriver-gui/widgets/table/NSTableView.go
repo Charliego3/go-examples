@@ -13,6 +13,7 @@ type NSTableView struct {
 
 	coder      NSCoder
 	dataSource NSTableViewDataSource
+	delegate   NSTableViewDelegate
 }
 
 func NewNSTableView(frame core.NSRect) NSTableView {
@@ -21,8 +22,11 @@ func NewNSTableView(frame core.NSRect) NSTableView {
 		coder:  NewNSCoder(),
 	}
 	dataSource := NewNSTableViewDataSource()
+	delegate := NewNSTableViewDelegate()
 	tableView.dataSource = dataSource
+	tableView.delegate = delegate
 	tableView.Set("dataSource:", dataSource.Object)
+	tableView.Set("delegate:", delegate.Object)
 	return tableView
 }
 

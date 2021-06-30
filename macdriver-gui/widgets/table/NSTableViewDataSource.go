@@ -1,7 +1,6 @@
 package table
 
 import (
-	"fmt"
 	"github.com/progrium/macdriver/objc"
 )
 
@@ -13,9 +12,9 @@ var defaultDataSource objc.Object
 
 func init() {
 	class := objc.NewClass("DefaultNSTableViewDataSource", "NSObject")
-	class.AddMethod("tableView:objectValueForTableColumn:row:", func(dataSource, table, column objc.Object, row int) objc.Object {
-		return NewNSCell(fmt.Sprintf("Row-%v, Column-%v", row, column.Uint()))
-	})
+	//class.AddMethod("tableView:objectValueForTableColumn:row:", func(dataSource, table, column objc.Object, row int) objc.Object {
+	//	return nil
+	//})
 	class.AddMethod("numberOfRowsInTableView:", func(object objc.Object) int {
 		return 50
 	})

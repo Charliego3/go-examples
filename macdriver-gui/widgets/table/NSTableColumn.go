@@ -3,6 +3,7 @@ package table
 import (
 	"github.com/progrium/macdriver/core"
 	"github.com/progrium/macdriver/objc"
+	"github.com/whimthen/temp/macdriver-gui/widgets/type_alias"
 )
 
 type NSTableColumn struct {
@@ -11,8 +12,8 @@ type NSTableColumn struct {
 
 var nsTableColumn = objc.Get("NSTableColumn")
 
-func NewNSTableColumn() NSTableColumn {
-	return NSTableColumn{Object: nsTableColumn.Alloc().Init()}
+func NewNSTableColumn(identifier string) NSTableColumn {
+	return NSTableColumn{Object: nsTableColumn.Alloc().Send("initWithIdentifier:", type_alias.NewNSUserInterfaceItemIdentifier(identifier))}
 }
 
 func (c NSTableColumn) SetTitle(title string) {

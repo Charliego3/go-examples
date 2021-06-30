@@ -8,6 +8,7 @@ import (
 	"github.com/whimthen/temp/macdriver-gui/widgets/alert"
 	"github.com/whimthen/temp/macdriver-gui/widgets/statusBar"
 	"github.com/whimthen/temp/macdriver-gui/widgets/table"
+	"github.com/whimthen/temp/macdriver-gui/widgets/type_alias"
 	"testing"
 )
 
@@ -105,6 +106,7 @@ func tableView(objc.Object) {
 			cocoa.NSResizableWindowMask|
 			cocoa.NSMiniaturizableWindowMask|
 			cocoa.NSFullSizeContentViewWindowMask|
+			cocoa.NSTexturedBackgroundWindowMask|
 			cocoa.NSTitledWindowMask,
 		cocoa.NSBackingStoreBuffered,
 		false,
@@ -112,7 +114,7 @@ func tableView(objc.Object) {
 	window.SetHasShadow(true)
 	window.SetTitlebarAppearsTransparent(true)
 
-	identifier := NewNSUserInterfaceItemIdentifier("tablecell")
+	identifier := type_alias.NewNSUserInterfaceItemIdentifier("tablecell")
 	_ = identifier
 	golog.Errorf("Identifier: %+v", identifier)
 
@@ -121,22 +123,24 @@ func tableView(objc.Object) {
 	sv.Set("verticalLineScroll:", float64(10))
 	clipView := NewNSClipView()
 	tableView := table.NewNSTableView(rect)
-	c1 := table.NewNSTableColumn()
+	c1 := table.NewNSTableColumn("Column1")
 	c1.SetTitle("Column1 Title")
 	c1.Set("minWidth:", float64(150))
 	c1.SetHeaderCell(table.NewNSTableHeaderCell("Column1 HeaderCell1"))
-	c2 := table.NewNSTableColumn()
+	c2 := table.NewNSTableColumn("Column2")
 	c2.SetTitle("Column2 Title")
 	c2.Set("editable:", true)
 	c2.Set("headerToolTip:", core.String("Header ToolTip"))
 	c2.SetHeaderCell(table.NewNSTableHeaderCell("Column2 HeaderCell2"))
-	tableView.AddTableColumn(c1, c2)
+	c3 := table.NewNSTableColumn("Number")
+	c3.SetHeaderCell(table.NewNSTableHeaderCell("序号"))
+	tableView.AddTableColumn(c3, c1, c2)
 	tableView.SetSelectionHighlightStyle(table.NSTableViewSelectionHighlightStyleRegular)
 	tableView.SetRowHeight(16)
 	tableView.SetRowSizeStyle(table.NSTableViewRowSizeStyleCustom)
 	tableView.SetStyle(table.NSTableViewStyleFullWidth)
-	tableView.SetGridStyleMask(table.NSTableViewDashedHorizontalGridLineMask)
-	tableView.SetGridColor(cocoa.Color(104, 104, 53, 1))
+	tableView.SetGridStyleMask(table.NSTableViewSolidHorizontalGridLineMask)
+	//tableView.SetGridColor(cocoa.Color(104, 104, 53, 1))
 	clipView.SetDocumentView(tableView)
 	sv.SetContentView(clipView)
 	sv.SetHorizontalScroller(NewNSScroller())
