@@ -30,8 +30,10 @@ func (b NSButton) SetBorderType(border BezelStyle) {
 	b.Set("bezelStyle:", core.NSUInteger(border))
 }
 
-func (b NSButton) SetAction(action func(object objc.Object)) {
-	obj, selector := core.Callback(action)
+func (b NSButton) SetAction(action func(object NSButton)) {
+	obj, selector := core.Callback(func(object objc.Object) {
+		action(b)
+	})
 	b.Set("target:", obj)
 	b.Set("action:", selector)
 }

@@ -11,7 +11,10 @@ type NSScroller struct {
 }
 
 func NewNSScroller() NSScroller {
-	return NSScroller{cocoa.NSView{objc.Get("NSScroller").Alloc().Init()}}
+	scroll := objc.Get("NSScroller").Alloc().Init()
+	//scroll.Send("scrollerWidthForControlSize:scrollerStyle:",
+	//	core.NSUInteger(NSControlSizeSmall), core.NSUInteger(NSScrollerStyleOverlay))
+	return NSScroller{cocoa.NSView{Object: scroll}}
 }
 
 func (s NSScroller) SetScrollerStyle(style NSScrollerStyle) {

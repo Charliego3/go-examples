@@ -9,12 +9,19 @@ type NSLayoutConstraint struct {
 	objc.Object
 }
 
+func NewNSLayoutConstraintWithAttr(subView objc.Object, subAttribute NSLayoutAttribute, relation NSLayoutRelation,
+	toItem objc.Object, toAttribute NSLayoutAttribute, multiplier float32, constant float32) NSLayoutConstraint {
+	return NSLayoutConstraint{objc.Get("NSLayoutConstraint").Alloc().
+		Send("constraintWithItem:attribute:relatedBy:toItem:attribute:multiplier:constant:",
+			subView, subAttribute, relation, toItem, toAttribute, multiplier, constant)}
+}
+
 func NewNSLayoutConstraint() NSLayoutConstraint {
 	return NSLayoutConstraint{Object: objc.Get("NSLayoutConstraint").Alloc().Init()}
 }
 
-func (c NSLayoutConstraint) SetConstraintWithItem(subView objc.Object, subAttribute NSLayoutConstraintAttribute, relation NSLayoutConstraintRelation,
-	toItem objc.Object, toAttribute NSLayoutConstraintAttribute, multiplier float64, constant float64) {
+func (c NSLayoutConstraint) SetConstraintWithItem(subView objc.Object, subAttribute NSLayoutAttribute, relation NSLayoutRelation,
+	toItem objc.Object, toAttribute NSLayoutAttribute, multiplier float64, constant float64) {
 	c.Set("constraintWithItem:attribute:relatedBy:toItem:attribute:multiplier:constant:",
 		&subView, core.NSUInteger(subAttribute), core.NSUInteger(relation), &toItem, core.NSUInteger(toAttribute), multiplier, constant,
 	)

@@ -12,6 +12,11 @@ type StatusMenuBarApplication struct {
 	menu cocoa.NSMenu
 }
 
+type SubMenu struct {
+	SubTitle string
+	Action   func(object objc.Object)
+}
+
 func NewStatusBarApp(title string, length float64) StatusMenuBarApplication {
 	cocoa.TerminateAfterWindowsClose = false
 	runtime.LockOSThread()
@@ -26,6 +31,24 @@ func NewStatusBarApp(title string, length float64) StatusMenuBarApplication {
 	app.SetActivationPolicy(cocoa.NSApplicationActivationPolicyAccessory)
 	app.ActivateIgnoringOtherApps(true)
 	return StatusMenuBarApplication{app: app, menu: menu}
+}
+
+func (a StatusMenuBarApplication) AddSubMenu(title string, menus ...SubMenu) {
+	subItem := cocoa.NSMenuItem_New()
+	subItem.SetTitle(title)
+	subMenu := cocoa.NSMenu_New()
+	subItem.SetSubmenu(subMenu)
+
+	for _, menu := range menus {
+		t1 := cocoa.NSMenuItem_New()
+		t1.SetTitle(menu.SubTitle)
+		object, selector := core.Callback(menu.Action)
+		t1.SetTarget(object)
+		t1.SetAction(selector)
+		subMenu.AddItem(t1)
+	}
+
+	a.menu.AddItem(subItem)
 }
 
 func (a StatusMenuBarApplication) AddMenuItem(title string, action func(object objc.Object)) {

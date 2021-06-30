@@ -110,7 +110,8 @@ func main() {
 
 	menu := cocoa.NSMenu_New()
 	menu.AddItem(itemQuit)
-	app.SetMainMenu(menu)
+	//app.SetMainMenu(menu)
+	app.Set("windowsMenu:", &menu)
 
 	app.SetActivationPolicy(cocoa.NSApplicationActivationPolicyRegular)
 	app.ActivateIgnoringOtherApps(true)

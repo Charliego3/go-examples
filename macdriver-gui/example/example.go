@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/progrium/macdriver/cocoa"
 	"github.com/progrium/macdriver/core"
 	"github.com/progrium/macdriver/objc"
@@ -72,7 +73,7 @@ func main() {
 	app := cocoa.NSApp_WithDidLaunch(wenAppLaunch)
 	app.Retain()
 
-	itemQuit := cocoa.NSMenuItem_Init("Quit", objc.Sel("terminate:"), "")
+	itemQuit := cocoa.NSMenuItem_Init("Quit", objc.Sel("terminate:"), "q")
 	menu := cocoa.NSMenu_Init("MenuInit")
 	menu.AddItem(itemQuit)
 	app.SetMainMenu(menu)
@@ -103,7 +104,7 @@ func wenAppLaunch(notification objc.Object) {
 
 	rootView.Send("addSubview:", &subView)
 	topConstraint := widgets.NewNSLayoutConstraint()
-	//topConstraint.SetConstraintWithItem(subView, widgets.NSLayoutConstraintAttributeTop, widgets.NSLayoutConstraintRelationLessEqual, rootView, widgets.NSLayoutConstraintAttributeBottom, 1.0, 40)
+	//topConstraint.SetConstraintWithItem(subView, widgets.NSLayoutConstraintAttributeTop, widgets.NSLayoutConstraintRelationEqual, rootView, widgets.NSLayoutConstraintAttributeBottom, 1.0, 40)
 	rootView.Send("addConstraints:", core.NSArray_WithObjects(topConstraint))
 	//rootView.AddSubviewPositionedRelativeTo(subView, 3, rootView)
 
@@ -115,12 +116,14 @@ func wenAppLaunch(notification objc.Object) {
 	btn1.SetTitle("Change Title")
 	btn1.SetBorderType(button.BezelStyleRounded)
 	btn1.SetType()
-	btn1.SetAction(func(object objc.Object) {
+	i := 0
+	btn1.SetAction(func(b button.NSButton) {
 		//rect := core.NSRect{
 		//	Origin: core.NSPoint{100, 200},
 		//	Size:   core.NSSize{400, 25},
 		//}
-		btn1.SetTitle("Changed Title With Action")
+		i++
+		btn1.SetTitle(fmt.Sprintf("Changed Title With Action %d", i))
 		//btn1.Set("frame:", rect)
 	})
 	subView.Send("addSubview:", &btn1)
@@ -129,7 +132,7 @@ func wenAppLaunch(notification objc.Object) {
 	btn.SetTitle("Show Alert with sheet modal")
 	btn.SetBorderType(button.BezelStyleRounded)
 	btn.SetType()
-	btn.SetAction(func(object objc.Object) {
+	btn.SetAction(func(b button.NSButton) {
 		showAlertWithSheet(window)
 	})
 	subView.Send("addSubview:", &btn)
@@ -138,12 +141,16 @@ func wenAppLaunch(notification objc.Object) {
 	disclosure.SetTitle("")
 	disclosure.SetBorderType(button.BezelStyleDisclosure)
 	disclosure.SetType()
-	disclosure.SetAction(func(obj objc.Object) {
+	disclosure.SetAction(func(b button.NSButton) {
 		//state := objc.Get("NSControl.StateValue")
 		//obj.Set("state:", state)
 	})
 	subView.Send("addSubview:", &disclosure)
 
+	window.Send("setMinSize:", core.NSSize{
+		Width:  300,
+		Height: 300,
+	})
 	window.SetTitle("Test sheet modal alert")
 	window.SetContentView(rootView)
 	window.MakeKeyAndOrderFront(rootView)

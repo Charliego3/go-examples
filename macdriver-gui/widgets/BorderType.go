@@ -1,6 +1,8 @@
 package widgets
 
-type NSBorderType uint
+import "github.com/progrium/macdriver/core"
+
+type NSBorderType core.NSUInteger
 
 const (
 	NoBorderType     NSBorderType = iota //No border.

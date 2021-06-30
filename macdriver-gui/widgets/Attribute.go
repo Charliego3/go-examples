@@ -1,34 +1,34 @@
 package widgets
 
-type NSLayoutConstraintAttribute uint
-type NSLayoutConstraintRelation uint
+type NSLayoutAttribute uint
+type NSLayoutRelation uint
 
 const (
-	NSLayoutConstraintAttributeNotAnAttribute NSLayoutConstraintAttribute = iota
-	NSLayoutConstraintAttributeLeft
-	NSLayoutConstraintAttributeRight
-	NSLayoutConstraintAttributeTop
-	NSLayoutConstraintAttributeBottom
-	NSLayoutConstraintAttributeLeading
-	NSLayoutConstraintAttributeTrailing
-	NSLayoutConstraintAttributeWidth
-	NSLayoutConstraintAttributeHeight
-	NSLayoutConstraintAttributeCenterX
-	NSLayoutConstraintAttributeCenterY
-	NSLayoutConstraintAttributeLastBaseline
-	NSLayoutConstraintAttributeFirstBaseline
-	NSLayoutConstraintAttributeLeftMargin
-	NSLayoutConstraintAttributeRightMargin
-	NSLayoutConstraintAttributeTopMargin
-	NSLayoutConstraintAttributeBottomMargin
-	NSLayoutConstraintAttributeLeadingMargin
-	NSLayoutConstraintAttributeTrailingMargin
-	NSLayoutConstraintAttributeCenterXWithinMargins
-	NSLayoutConstraintAttributeCenterYWithinMargins
+	NSLayoutAttributeNotAnAttribute NSLayoutAttribute = iota
+	NSLayoutAttributeLeft
+	NSLayoutAttributeRight
+	NSLayoutAttributeTop
+	NSLayoutAttributeBottom
+	NSLayoutAttributeLeading
+	NSLayoutAttributeTrailing
+	NSLayoutAttributeWidth
+	NSLayoutAttributeHeight
+	NSLayoutAttributeCenterX
+	NSLayoutAttributeCenterY
+	NSLayoutAttributeLastBaseline
+	NSLayoutAttributeFirstBaseline
+	NSLayoutAttributeLeftMargin
+	NSLayoutAttributeRightMargin
+	NSLayoutAttributeTopMargin
+	NSLayoutAttributeBottomMargin
+	NSLayoutAttributeLeadingMargin
+	NSLayoutAttributeTrailingMargin
+	NSLayoutAttributeCenterXWithinMargins
+	NSLayoutAttributeCenterYWithinMargins
 )
 
 const (
-	//NSLayoutConstraintRelationLessThanOrEqual NSLayoutConstraintRelation = iota - 1
-	NSLayoutConstraintRelationLessEqual              = 0
-	NSLayoutConstraintRelationLessGreaterThanOrEqual = 1
+	//NSLayoutRelationLessThanOrEqual NSLayoutRelation = iota - 1
+	NSLayoutRelationEqual              NSLayoutRelation = 0
+	NSLayoutRelationGreaterThanOrEqual                  = 1
 )

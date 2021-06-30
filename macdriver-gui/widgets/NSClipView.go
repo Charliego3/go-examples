@@ -18,6 +18,6 @@ func (c NSClipView) ScrollTo(point core.NSPoint) {
 	c.Send("scrollTo:", point)
 }
 
-func (c NSClipView) SetDocumentView(view cocoa.NSView) {
-	c.Set("documentView:", &view)
+func (c NSClipView) SetDocumentView(view objc.Object) {
+	c.Set("documentView:", view)
 }
