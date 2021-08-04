@@ -18,3 +18,5 @@
 *.iml
 
 *.wasm
+
+.DS_Store
