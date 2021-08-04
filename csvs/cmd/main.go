@@ -2,14 +2,15 @@ package main
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/shopspring/decimal"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/whimthen/temp/csvs"
 	"github.com/whimthen/temp/times"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 func main() {

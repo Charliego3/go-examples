@@ -1,7 +1,5 @@
-import (
-	"os"
-)
+package main
 
 func main() {
-	os
+
 }

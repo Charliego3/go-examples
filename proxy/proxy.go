@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
 	"github.com/kataras/golog"
 	"io"
@@ -19,15 +20,12 @@ import (
 //go:embed proxy.pac
 var pac string
 
+//go:embed proxy.whitelist
+var ovpn string
+
 func main() {
 	golog.SetLevel("debug")
 	golog.SetTimeFormat("2006-01-02 15:04:05.000")
-
-	l, err := net.Listen("tcp", ":8081")
-	if err != nil {
-		golog.Error(err)
-		return
-	}
 
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
@@ -57,32 +55,40 @@ func main() {
 	}
 
 	conf := filepath.Join(dir, ".vpn-proxy")
-	file, err := os.OpenFile(conf, os.O_APPEND|os.O_CREATE, 0644)
+	file, err := os.OpenFile(conf, os.O_RDONLY, 0644)
+	fileIsExist := true
 	if err != nil {
-		golog.Error("读取配置文件失败", err)
-		return
+		if !errors.Is(err, os.ErrNotExist) {
+			golog.Error("读取配置文件失败", err)
+			return
+		}
+		golog.Warnf("可以将需要排除的域名或IP配置在`%s`中, 按行分割", conf)
+		fileIsExist = false
 	}
 
 	var exclude []string
-	reader := bufio.NewReader(file)
-	for {
-		line, err := reader.ReadString('\n')
-		if err != nil && err != io.EOF {
-			golog.Error("读取配置文件失败: ", err)
-			return
+	if fileIsExist {
+		reader := bufio.NewReader(file)
+		for {
+			line, err := reader.ReadString('\n')
+			if err != nil && err != io.EOF {
+				golog.Error("读取配置文件失败: ", err)
+				return
+			}
+
+			if err == io.EOF {
+				break
+			}
+			line = strings.TrimSuffix(line, "\n")
+			exclude = append(exclude, fmt.Sprintf("shExpMatch(host, \"%s\")", line))
 		}
 
-		if err == io.EOF {
-			break
-		}
-		line = strings.TrimSuffix(line, "\n")
-		exclude = append(exclude, fmt.Sprintf("shExpMatch(host, \"%s\")", line))
+		file.Close()
 	}
 
-	file.Close()
-
-	if len(exclude) == 0 {
-		golog.Warnf("将需要排除的域名或IP配置在`%s`中, 按行分割")
+	domains := strings.Split(ovpn, "\n")
+	for _, domain := range domains {
+		exclude = append(exclude, fmt.Sprintf("shExpMatch(host, \"%s\")", domain))
 	}
 
 	go func() {
@@ -101,6 +107,11 @@ func main() {
 		}
 	}()
 
+	l, err := net.Listen("tcp", ":8081")
+	if err != nil {
+		golog.Error(err)
+		return
+	}
 	for {
 		client, err := l.Accept()
 		if err != nil {
@@ -140,9 +151,14 @@ func handleClientRequest(client net.Conn) {
 		golog.Error("[%s]Scan host error: %+v", client.RemoteAddr().String(), err)
 		return
 	}
-	golog.Infof("METHOD: %*q, ADDRESS: %q, HOST: %q", 9, method, address, host)
+	var httpHost string
 	if strings.Index(host, "http://") == 0 || strings.Index(host, "https://") == 0 {
+		u, err := url.Parse(host)
+		if err == nil {
+			httpHost = u.Scheme + "://" + u.Host
+		}
 
+		golog.Infof("METHOD: %*q, ADDRESS: %q, HTTP_HOST: %q", 9, method, address, httpHost)
 		// 解析POST请求参数
 		buffer := bytes.NewBuffer(b[:])
 		index := 0
@@ -175,6 +191,7 @@ func handleClientRequest(client net.Conn) {
 		io.Copy(client, resp.Body)
 		return
 	}
+	golog.Infof("METHOD: %*q, ADDRESS: %q, HOST: %q", 9, method, address, host)
 	if !strings.Contains(host, ":") {
 		hostPortURL, err := url.Parse(host)
 		if err != nil {
