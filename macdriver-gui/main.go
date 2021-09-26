@@ -2,17 +2,60 @@ package main
 
 import (
 	"fmt"
+	"github.com/kataras/golog"
+	"github.com/progrium/macdriver/cocoa"
+	"github.com/progrium/macdriver/core"
+	"github.com/progrium/macdriver/objc"
+	"github.com/whimthen/temp/macdriver-gui/widgets"
 	"runtime"
 	"time"
-
-	"github.com/progrium/macdriver/cocoa"
-	"github.com/progrium/macdriver/objc"
 )
 
 func main() {
+	textField()
+}
+
+func textField() {
+	app := cocoa.NSApp_WithDidLaunch(func(notification objc.Object) {
+		win := cocoa.NSWindow_Init(
+			core.Rect(0, 0, 600, 665),
+			cocoa.NSClosableWindowMask|
+				cocoa.NSResizableWindowMask|
+				cocoa.NSMiniaturizableWindowMask|
+				cocoa.NSFullSizeContentViewWindowMask|
+				cocoa.NSTitledWindowMask,
+			cocoa.NSBackingStoreBuffered,
+			false,
+		)
+		win.SetHasShadow(true)
+		//win.SetTitlebarAppearsTransparent(true)
+
+		rootView := cocoa.NSView_Init(win.Frame())
+
+		textField := widgets.NewNSTextField(core.Rect(10, 10, 100, 22))
+
+		rootView.Send("addSubview:", &textField)
+
+		win.SetContentView(rootView)
+		//win.SetTitleVisibility(cocoa.NSWindowTitleHidden)
+		win.SetIgnoresMouseEvents(false)
+		win.SetMovableByWindowBackground(false)
+		win.SetLevel(0)
+		win.MakeKeyAndOrderFront(rootView)
+		win.SetCollectionBehavior(cocoa.NSWindowCollectionBehaviorCanJoinAllSpaces)
+		win.Center()
+	})
+
+	app.Retain()
+	app.Run()
+}
+
+func statusBarApp() {
 	runtime.LockOSThread()
 
-	app := cocoa.NSApp_WithDidLaunch(func(n objc.Object) {
+	app := cocoa.NSApp_WithDidLaunch(func(notification objc.Object) {
+		golog.Errorf("Param: %+v", notification)
+
 		obj := cocoa.NSStatusBar_System().StatusItemWithLength(cocoa.NSVariableStatusItemLength)
 		obj.Retain()
 		obj.Button().SetTitle("▶️ Ready")

@@ -24,8 +24,8 @@ func main() {
 		alert := menuet.Alert{
 			MessageText:     "This is a Alert",
 			InformativeText: "This is InformativeText",
-			//Buttons:         []string{"Btn1", "Btn2"},
-			//Inputs:          []string{"Input1", "Input2"},
+			Buttons:         []string{"Btn1", "Btn2"},
+			Inputs:          []string{"Input1", "Input2"},
 		}
 		clicked := menuet.App().Alert(alert)
 

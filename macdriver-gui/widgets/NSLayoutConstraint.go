@@ -5,13 +5,51 @@ import (
 	"github.com/progrium/macdriver/objc"
 )
 
+type NSLayoutFormatOptions uint
+
+const (
+	NSLayoutFormatSpacingMask                NSLayoutFormatOptions = 0x1 << 19
+	NSLayoutFormatSpacingBaselineToBaseline  NSLayoutFormatOptions = 1 << 19
+	NSLayoutFormatSpacingEdgeToEdge          NSLayoutFormatOptions = 0 << 19
+	NSLayoutFormatDirectionMask              NSLayoutFormatOptions = 0x3 << 16
+	NSLayoutFormatDirectionRightToLeft       NSLayoutFormatOptions = 2 << 16
+	NSLayoutFormatDirectionLeftToRight       NSLayoutFormatOptions = 1 << 16
+	NSLayoutFormatDirectionLeadingToTrailing NSLayoutFormatOptions = 0 << 16
+	NSLayoutFormatAlignmentMask              NSLayoutFormatOptions = 0xFFFF
+	NSLayoutFormatAlignAllFirstBaseline      NSLayoutFormatOptions = 1 << NSLayoutAttributeFirstBaseline
+	NSLayoutFormatAlignAllLastBaseline       NSLayoutFormatOptions = 1 << NSLayoutAttributeLastBaseline
+	NSLayoutFormatAlignAllBaseline           NSLayoutFormatOptions = NSLayoutFormatAlignAllLastBaseline
+	NSLayoutFormatAlignAllCenterY            NSLayoutFormatOptions = 1 << NSLayoutAttributeCenterY
+	NSLayoutFormatAlignAllCenterX            NSLayoutFormatOptions = 1 << NSLayoutAttributeCenterX
+	NSLayoutFormatAlignAllTrailing           NSLayoutFormatOptions = 1 << NSLayoutAttributeTrailing
+	NSLayoutFormatAlignAllLeading            NSLayoutFormatOptions = 1 << NSLayoutAttributeLeading
+	NSLayoutFormatAlignAllBottom             NSLayoutFormatOptions = 1 << NSLayoutAttributeBottom
+	NSLayoutFormatAlignAllTop                NSLayoutFormatOptions = 1 << NSLayoutAttributeTop
+	NSLayoutFormatAlignAllRight              NSLayoutFormatOptions = 1 << NSLayoutAttributeRight
+	NSLayoutFormatAlignAllLeft               NSLayoutFormatOptions = 1 << NSLayoutAttributeLeft
+)
+
 type NSLayoutConstraint struct {
-	objc.Object
+	objc.Object `objc:"GoNSLayoutConstraint : NSLayoutConstraint"`
+}
+
+func init() {
+	class := objc.NewClassFromStruct(NSLayoutConstraint{})
+	objc.RegisterClass(class)
+}
+
+func NewNSLayoutConstraintWithFormat(view1, view2 objc.Object) objc.Object {
+	metricsDic := core.NSDictionary_Init(core.String("left"), float32(20), core.String("right"), float32(20), core.String("space"), float32(20), core.String("top"), float32(20))
+	views := core.NSDictionary_Init(core.String("view1"), view1, core.String("view2"), view2)
+	return objc.Get("NSLayoutConstraint").Alloc().
+		Send("constraintsWithVisualFormat:options:metrics:views:",
+			core.String("H:|-left-[view1]-space-[view2(view1)]-right-|"),
+			NSLayoutFormatAlignAllTop, metricsDic, views)
 }
 
 func NewNSLayoutConstraintWithAttr(subView objc.Object, subAttribute NSLayoutAttribute, relation NSLayoutRelation,
 	toItem objc.Object, toAttribute NSLayoutAttribute, multiplier float32, constant float32) NSLayoutConstraint {
-	return NSLayoutConstraint{objc.Get("NSLayoutConstraint").Alloc().
+	return NSLayoutConstraint{objc.Get("GoNSLayoutConstraint").Alloc().
 		Send("constraintWithItem:attribute:relatedBy:toItem:attribute:multiplier:constant:",
 			subView, subAttribute, relation, toItem, toAttribute, multiplier, constant)}
 }
@@ -21,9 +59,9 @@ func NewNSLayoutConstraint() NSLayoutConstraint {
 }
 
 func (c NSLayoutConstraint) SetConstraintWithItem(subView objc.Object, subAttribute NSLayoutAttribute, relation NSLayoutRelation,
-	toItem objc.Object, toAttribute NSLayoutAttribute, multiplier float64, constant float64) {
+	toItem objc.Object, toAttribute NSLayoutAttribute, multiplier float32, constant float32) {
 	c.Set("constraintWithItem:attribute:relatedBy:toItem:attribute:multiplier:constant:",
-		&subView, core.NSUInteger(subAttribute), core.NSUInteger(relation), &toItem, core.NSUInteger(toAttribute), multiplier, constant,
+		&subView, subAttribute, relation, &toItem, toAttribute, multiplier, constant,
 	)
 }
 

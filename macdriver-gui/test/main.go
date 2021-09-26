@@ -54,7 +54,7 @@ func main() {
 		searchField.SetRecentSearches("abc", "ddd", "TextField")
 
 		textField.SetStringValue("TextFieldTest")
-		textField.SetIsBordered(true)
+		textField.SetBordered(true)
 		textField.Set("placeholderString:", core.String("PlaceholderString"))
 		textField.Set("drawsBackground:", true)
 
@@ -69,6 +69,15 @@ func main() {
 		view.Send("addSubview:", &textView)
 		view.Send("addSubview:", &searchField)
 		view.Send("addSubview:", &textField)
+
+		//nsButton := button.NewButtonWithFrame(core.Rect(10, 50, 200, 25))
+		//nsButton.SetTitle("show alert")
+		//nsButton.SetAction(func(object button.NSButton) {
+		//	golog.Error("show alert is action")
+		//	ShowAlert(w)
+		//})
+		//nsButton.SetBorderType(button.BezelStyleRounded)
+		//view.Send("addSubview:", &nsButton)
 		//view.SetWantsLayer(true)
 		//view.Layer().SetCornerRadius(32.0)
 		//view.AddSubviewPositionedRelativeTo(textField, cocoa.NSWindowBelow, nil)
@@ -104,17 +113,17 @@ func main() {
 		//alert.Show()
 	})
 
-	itemQuit := cocoa.NSMenuItem_New()
-	itemQuit.SetTitle("Quit")
-	itemQuit.SetAction(objc.Sel("terminate:"))
-
-	menu := cocoa.NSMenu_New()
-	menu.AddItem(itemQuit)
-	//app.SetMainMenu(menu)
-	app.Set("windowsMenu:", &menu)
-
+	//itemQuit := cocoa.NSMenuItem_New()
+	//itemQuit.SetTitle("Quit")
+	//itemQuit.SetAction(objc.Sel("terminate:"))
+	//
+	//menu := cocoa.NSMenu_New()
+	//menu.AddItem(itemQuit)
+	////app.SetMainMenu(menu)
+	//app.Set("windowsMenu:", &menu)
+	//
 	app.SetActivationPolicy(cocoa.NSApplicationActivationPolicyRegular)
-	app.ActivateIgnoringOtherApps(true)
+	//app.ActivateIgnoringOtherApps(true)
 	app.Run()
 }
 
@@ -126,6 +135,7 @@ func ShowAlert(win objc.Object) {
 	alert.AddButtonWithTitle("Alternative")
 	alert.AddButtonWithTitle("Other")
 
+	golog.Error("ShowAlert")
 	//alert.Show()
 	alert.BeginSheetModalForWindow(win.(cocoa.NSWindow))
 }

@@ -12,6 +12,30 @@ import (
 	"testing"
 )
 
+func TestConstraint(t *testing.T) {
+	//t.Log(objc.Get("NSCommandKeyMask"))
+	//
+	//
+	//class := objc.Get("NSLayoutConstraint")
+	//t.Logf("ConstraintClass: %#v", class)
+	//alloc := class.Alloc()
+	//t.Logf("ConstraintAlloc: %#v", alloc)
+	//instance := alloc.Init()
+	//t.Logf("Constraint: %#v", instance)
+	rootView := cocoa.NSView_Init(core.Rect(0, 0, 100, 100))
+	subView := cocoa.NSView_Init(core.Rect(0, 0, 200, 300))
+	subView.SetBackgroundColor(cocoa.Color(255, 255, 0, 1))
+	subView.SetWantsLayer(true)
+	subView.Set("translatesAutoresizingMaskIntoConstraints:", core.False)
+	rootView.Send("addSubview:", subView)
+
+	dict := core.NSDictionary_Init(rootView, core.String("view1"), subView, core.String("view2"))
+	t.Log(dict)
+
+	t.Logf("Constraint: %#v", NewNSLayoutConstraintWithFormat(rootView, subView))
+	constraint(nil)
+}
+
 func TestViews(t *testing.T) {
 	app := statusBar.NewStatusBarApp("🛠", cocoa.NSSquareStatusItemLength)
 	app.AddSubMenu("Window Example",
@@ -31,9 +55,60 @@ func TestViews(t *testing.T) {
 	app.AddMenuItem("Show Alert", showAlert)
 	app.AddMenuItem("Open file selection", openFileSelection)
 	app.AddMenuItem("Open new window", openWindow)
+	app.AddMenuItem("Constraint", constraint)
 	app.AddItemSeparator()
 	app.AddTerminateItem()
 	app.Run()
+}
+
+func constraint(objc.Object) {
+	win := cocoa.NSWindow_Init(
+		core.Rect(0, 0, 600, 665),
+		cocoa.NSClosableWindowMask|
+			cocoa.NSResizableWindowMask|
+			cocoa.NSMiniaturizableWindowMask|
+			cocoa.NSFullSizeContentViewWindowMask|
+			cocoa.NSTitledWindowMask,
+		cocoa.NSBackingStoreBuffered,
+		false,
+	)
+	win.SetHasShadow(true)
+	//win.SetTitlebarAppearsTransparent(true)
+
+	rootView := cocoa.NSView_Init(win.Frame())
+
+	subView := cocoa.NSView_Init(core.Rect(0, 0, 200, 300))
+	subView.SetBackgroundColor(cocoa.Color(255, 255, 0, 1))
+	subView.SetWantsLayer(true)
+	//subView.Layer().SetCornerRadius(5)
+	subView.Set("translatesAutoresizingMaskIntoConstraints:", false)
+
+	rootView.Send("addSubview:", subView)
+	//constraint := objc.Get("NSLayoutConstraint").Alloc().
+	//	Send("constraintWithItem:attribute:relatedBy:toItem:attribute:multiplier:constant:",
+	//		&subView, NSLayoutAttributeTop, NSLayoutRelationEqual, &rootView, NSLayoutAttributeLeft, 1.0, 100.0)
+
+	//topConstraint := NewNSLayoutConstraint()
+	//topConstraint.SetConstraintWithItem(subView, NSLayoutAttributeLeft, NSLayoutRelationEqual, rootView, NSLayoutAttributeLeft, 1.0, 40)
+	//topConstraint := NewNSLayoutConstraintWithAttr(subView,
+	//	NSLayoutAttributeLeft,
+	//	NSLayoutRelationEqual,
+	//	rootView,
+	//	NSLayoutAttributeLeft,
+	//	1.0, 50.0,
+	//)
+	//constraint := objc.Get("NSLayoutConstraint").Alloc()
+	//constraint.Set("constant:", 200.0)
+	rootView.Send("addConstraints:", NewNSLayoutConstraintWithFormat(rootView, subView))
+
+	win.SetContentView(rootView)
+	//win.SetTitleVisibility(cocoa.NSWindowTitleHidden)
+	win.SetIgnoresMouseEvents(false)
+	win.SetMovableByWindowBackground(false)
+	win.SetLevel(0)
+	win.MakeKeyAndOrderFront(rootView)
+	win.SetCollectionBehavior(cocoa.NSWindowCollectionBehaviorCanJoinAllSpaces)
+	win.Center()
 }
 
 func layoutConstraint(object objc.Object) {
@@ -52,8 +127,7 @@ func layoutConstraint(object objc.Object) {
 
 	rootView := cocoa.NSView_Init(win.Frame())
 
-	subView := cocoa.NSView{objc.Get("NSView").Alloc().Init()}
-	//subView := cocoa.NSView_Init(core.Rect(0, 0, 200, 300))
+	subView := cocoa.NSView{Object: objc.Get("NSView").Alloc().Init()}
 	subView.SetBackgroundColor(cocoa.Color(255, 255, 0, 1))
 	subView.SetWantsLayer(true)
 	subView.Layer().SetCornerRadius(10)
@@ -65,28 +139,28 @@ func layoutConstraint(object objc.Object) {
 		NSLayoutRelationEqual,
 		rootView,
 		NSLayoutAttributeLeft,
-		1, 0,
+		1.0, 10.0,
 	))
 	rootView.Send("addConstraint:", NewNSLayoutConstraintWithAttr(subView,
 		NSLayoutAttributeRight,
 		NSLayoutRelationEqual,
 		rootView,
 		NSLayoutAttributeRight,
-		1, 0,
+		1.0, 10.0,
 	))
 	rootView.Send("addConstraint:", NewNSLayoutConstraintWithAttr(subView,
 		NSLayoutAttributeTop,
 		NSLayoutRelationEqual,
 		rootView,
 		NSLayoutAttributeTop,
-		1, 0,
+		1.0, 10.0,
 	))
 	rootView.Send("addConstraint:", NewNSLayoutConstraintWithAttr(subView,
 		NSLayoutAttributeHeight,
 		NSLayoutRelationEqual,
 		rootView,
 		NSLayoutAttributeHeight,
-		1, 200,
+		1.0, 200.0,
 	))
 
 	win.SetContentView(rootView)
@@ -138,7 +212,7 @@ func tableView(objc.Object) {
 	tableView.SetSelectionHighlightStyle(table.NSTableViewSelectionHighlightStyleRegular)
 	tableView.SetRowHeight(16)
 	tableView.SetRowSizeStyle(table.NSTableViewRowSizeStyleCustom)
-	tableView.SetStyle(table.NSTableViewStyleFullWidth)
+	//tableView.SetStyle(table.NSTableViewStyleAutomatic)
 	tableView.SetGridStyleMask(table.NSTableViewSolidHorizontalGridLineMask)
 	//tableView.SetGridColor(cocoa.Color(104, 104, 53, 1))
 	clipView.SetDocumentView(tableView)
@@ -204,7 +278,7 @@ func openFileSelection(_ objc.Object) {
 	panel.SetCanCreateDirectories(false)
 	panel.SetCanChooseFiles(true)
 	panel.SetMessage("Please choose a html table content file")
-	resp := panel.RunModalForDirectory()
+	resp := panel.Show()
 	println(resp)
 }
 
