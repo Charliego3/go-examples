@@ -8,6 +8,7 @@ require (
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/PuerkitoBio/goquery v1.6.0
 	github.com/alecthomas/chroma v0.8.2
+	github.com/andlabs/ui v0.0.0-20200610043537-70a69d6ae31e
 	github.com/caseymrm/menuet v1.0.1
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/extrame/ole2 v0.0.0-20160812065207-d69429661ad7 // indirect
