@@ -8,8 +8,9 @@ import (
 )
 
 type StatusMenuBarApplication struct {
-	app  cocoa.NSApplication
-	menu cocoa.NSMenu
+	cocoa.NSApplication
+	Menu cocoa.NSMenu
+	obj  cocoa.NSStatusItem
 }
 
 type SubMenu struct {
@@ -17,20 +18,27 @@ type SubMenu struct {
 	Action   func(object objc.Object)
 }
 
-func NewStatusBarApp(title string, length float64) StatusMenuBarApplication {
+func NewStatusBarApp(title string, fn func(item cocoa.NSStatusItem)) StatusMenuBarApplication {
 	cocoa.TerminateAfterWindowsClose = false
 	runtime.LockOSThread()
 	menu := cocoa.NSMenu_New()
+	var obj cocoa.NSStatusItem
 	app := cocoa.NSApp_WithDidLaunch(func(notification objc.Object) {
-		obj := cocoa.NSStatusBar_System().StatusItemWithLength(length)
+		obj = cocoa.NSStatusBar_System().StatusItemWithLength(cocoa.NSVariableStatusItemLength)
 		obj.Retain()
 		obj.Button().SetTitle(title)
 		obj.SetMenu(menu)
+
+		fn(obj)
 	})
 
 	app.SetActivationPolicy(cocoa.NSApplicationActivationPolicyAccessory)
 	app.ActivateIgnoringOtherApps(true)
-	return StatusMenuBarApplication{app: app, menu: menu}
+	return StatusMenuBarApplication{NSApplication: app, Menu: menu, obj: obj}
+}
+
+func (a StatusMenuBarApplication) SetTitle(title string) {
+	a.obj.Button().SetTitle(title)
 }
 
 func (a StatusMenuBarApplication) AddSubMenu(title string, menus ...SubMenu) {
@@ -48,23 +56,25 @@ func (a StatusMenuBarApplication) AddSubMenu(title string, menus ...SubMenu) {
 		subMenu.AddItem(t1)
 	}
 
-	a.menu.AddItem(subItem)
+	a.Menu.AddItem(subItem)
 }
 
-func (a StatusMenuBarApplication) AddMenuItem(title string, action func(object objc.Object)) {
+func (a StatusMenuBarApplication) AddMenuItem(title string, action func(object objc.Object)) cocoa.NSMenuItem {
 	obj, sel := core.Callback(action)
 	item := cocoa.NSMenuItem_New()
 	item.SetTitle(title)
 	item.SetAction(sel)
 	item.SetTarget(obj)
-	a.menu.AddItem(item)
+	a.Menu.AddItem(item)
+	return item
 }
 
-func (a StatusMenuBarApplication) AddMenuItemWithSelector(title string, sel objc.Selector) {
+func (a StatusMenuBarApplication) AddMenuItemWithSelector(title string, sel objc.Selector) cocoa.NSMenuItem {
 	item := cocoa.NSMenuItem_New()
 	item.SetTitle(title)
 	item.SetAction(sel)
-	a.menu.AddItem(item)
+	a.Menu.AddItem(item)
+	return item
 }
 
 func (a StatusMenuBarApplication) AddTerminateItem(title ...string) {
@@ -76,9 +86,9 @@ func (a StatusMenuBarApplication) AddTerminateItem(title ...string) {
 }
 
 func (a StatusMenuBarApplication) AddItemSeparator() {
-	a.menu.AddItem(cocoa.NSMenuItem_Separator())
+	a.Menu.AddItem(cocoa.NSMenuItem_Separator())
 }
 
 func (a StatusMenuBarApplication) Run() {
-	a.app.Run()
+	a.NSApplication.Run()
 }

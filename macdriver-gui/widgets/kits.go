@@ -2,7 +2,6 @@ package widgets
 
 import (
 	"github.com/progrium/macdriver/core"
-	"github.com/progrium/macdriver/objc"
 )
 
 func NewStringNSArray(strs ...string) core.NSArray {
@@ -10,5 +9,5 @@ func NewStringNSArray(strs ...string) core.NSArray {
 	for i, str := range strs {
 		objsInterface[i] = core.String(str)
 	}
-	return core.NSArray{Object: objc.Get("NSArray").Send("arrayWithObjects:", objsInterface...)}
+	return core.NSArray{}
 }

@@ -72,7 +72,7 @@ func init() {
 }
 
 func NewNSTextField(frame core.NSRect) NSTextField {
-	return NSTextField{NSView: cocoa.NSView{Object: textFieldObj.Alloc().Send("initWithFrame:", frame)}}
+	return NSTextField{NSView: cocoa.NSView{}}
 }
 
 func (t NSTextField) SetBackgroundColor(color cocoa.NSColor) {

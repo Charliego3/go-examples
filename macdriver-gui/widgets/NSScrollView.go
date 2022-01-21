@@ -15,7 +15,7 @@ type NSScrollView struct {
 }
 
 func NewNSScrollView(frame core.NSRect) NSScrollView {
-	return NSScrollView{cocoa.NSView{scrollView.Alloc().Send("initWithFrame:", frame)}}
+	return NSScrollView{cocoa.NSView{}}
 }
 
 func (s NSScrollView) SetContentView(clip NSClipView) {

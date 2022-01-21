@@ -13,7 +13,7 @@ type NSSearchField struct {
 var nsSearchField = objc.Get("NSSearchField")
 
 func NewNSSearchField(frame core.NSRect) NSSearchField {
-	return NSSearchField{NSView: cocoa.NSView{Object: nsSearchField.Alloc().Send("initWithFrame:", frame)}}
+	return NSSearchField{NSView: cocoa.NSView{}}
 }
 
 func (s NSSearchField) SetRecentSearches(recent ...string) {

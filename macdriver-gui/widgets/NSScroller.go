@@ -3,7 +3,6 @@ package widgets
 import (
 	"github.com/progrium/macdriver/cocoa"
 	"github.com/progrium/macdriver/core"
-	"github.com/progrium/macdriver/objc"
 )
 
 type NSScroller struct {
@@ -11,10 +10,10 @@ type NSScroller struct {
 }
 
 func NewNSScroller() NSScroller {
-	scroll := objc.Get("NSScroller").Alloc().Init()
+	//scroll := objc.Get("NSScroller").Alloc().Init()
 	//scroll.Send("scrollerWidthForControlSize:scrollerStyle:",
 	//	core.NSUInteger(NSControlSizeSmall), core.NSUInteger(NSScrollerStyleOverlay))
-	return NSScroller{cocoa.NSView{Object: scroll}}
+	return NSScroller{cocoa.NSView{}}
 }
 
 func (s NSScroller) SetScrollerStyle(style NSScrollerStyle) {

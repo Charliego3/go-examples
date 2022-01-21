@@ -17,7 +17,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gen2brain/dlgs v0.0.0-20201118155338-03fe7f81ad25
 	github.com/go-redis/redis/v8 v8.11.0
-	github.com/go-resty/resty/v2 v2.6.0
+	github.com/go-resty/resty/v2 v2.7.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-vgo/robotgo v0.90.3
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
@@ -32,23 +32,21 @@ require (
 	github.com/muesli/termenv v0.8.1
 	github.com/multiformats/go-multihash v0.0.16 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/progrium/macdriver v0.1.0
+	github.com/progrium/macdriver v0.2.0
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/robfig/cron/v3 v3.0.0
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/cobra v1.0.0
-	github.com/sqweek/dialog v0.0.0-20200911184034-8a3d98e8211d
-	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/spf13/cobra v1.1.3
+	github.com/sqweek/dialog v0.0.0-20211002065838-9a201b55ab91
 	github.com/webview/webview v0.0.0-20200724072439-e0c01595b361
 	github.com/whimthen/kits v1.0.2
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
-	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
 	golang.org/x/sys v0.0.0-20210923061019-b8560ed6a9b7 // indirect
 	golang.org/x/text v0.3.6
 	google.golang.org/genproto v0.0.0-20210513213006-bf773b8c8384 // indirect
 	google.golang.org/grpc v1.36.1
 	google.golang.org/protobuf v1.26.0
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

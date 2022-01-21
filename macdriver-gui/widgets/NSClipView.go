@@ -11,7 +11,7 @@ type NSClipView struct {
 }
 
 func NewNSClipView() NSClipView {
-	return NSClipView{cocoa.NSView{objc.Get("NSClipView").Alloc().Init()}}
+	return NSClipView{cocoa.NSView{}}
 }
 
 func (c NSClipView) ScrollTo(point core.NSPoint) {

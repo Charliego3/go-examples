@@ -13,7 +13,7 @@ type NSOpenPanel struct {
 var nsOpenPanel_ = objc.Get("NSOpenPanel")
 
 func NewNSOpenPanel() NSOpenPanel {
-	return NSOpenPanel{NSView: cocoa.NSView{Object: nsOpenPanel_.Alloc().Init()}}
+	return NSOpenPanel{NSView: cocoa.NSView{}}
 }
 
 func (p NSOpenPanel) SetMessage(message string) {
