@@ -1,46 +1,33 @@
 package main
 
 import (
-	"strconv"
-
+	"fmt"
 	"github.com/lxn/walk"
-	"github.com/lxn/walk/declarative"
+	"os"
 )
 
+var settings *walk.IniFileSettings
+
+func init() {
+	settings = walk.NewIniFileSettings("hty_settings.ini")
+	if err := settings.Load(); err != nil {
+		walk.MsgBox(nil, "加载配置错误", fmt.Sprintf("%s", err.Error()), walk.MsgBoxIconError)
+		os.Exit(1)
+	}
+}
+
 func main() {
-	loginWindow, err := NewLoginWindow()
-	if err != nil {
-		return
-	}
+	// loginWindow, err := NewLoginWindow()
+	// if err != nil {
+	// 	return
+	// }
+	//
+	// r := loginWindow.Run()
+	//
+	// if r != 1 {
+	// 	return
+	// }
 
-	r := loginWindow.Run()
-
-	if r != 1 {
-		return
-	}
-
-	walk.MsgBox(loginWindow, "fanhuizhi", strconv.Itoa(r), walk.MsgBoxIconInformation)
-
-	var window *walk.MainWindow
-
-	declarative.MainWindow{
-		AssignTo: &window,
-		Title:    WindowTitle,
-		MinSize:  declarative.Size{Width: 800, Height: 600},
-		Size:     declarative.Size{Width: 800, Height: 600},
-		Layout:   declarative.Grid{MarginsZero: true, Columns: 2},
-		Children: []declarative.Widget{
-			declarative.ImageView{
-				Background: declarative.SolidColorBrush{Color: walk.RGB(255, 255, 255)},
-				Image:      "resources/logo.jpg",
-				Mode:       declarative.ImageViewModeCenter,
-				MinSize:    declarative.Size{Width: 300},
-			},
-
-			declarative.Label{Text: "Home Window"},
-		},
-	}.Run()
-
-	// win.SetWindowPos(loginWindow.Handle(), win.HWND_DESKTOP, -1, -1, -1, -1, win.SWP_NOMOVE|win.SWP_NOREPOSITION|win.SWP_NOSIZE)
-	// loginWindow.Run()
+	window := NewHomeWindow()
+	window.Run()
 }

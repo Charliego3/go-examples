@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	"github.com/lxn/walk"
 	"github.com/lxn/walk/declarative"
 )
@@ -16,9 +15,12 @@ type LoginWindow struct {
 	Remember bool
 }
 
-// func (lw *LoginWindow) Run() {
-// 	(*lw.Dialog).Run()
-// }
+const (
+	number   = "number"
+	username = "username"
+	password = "password"
+	remember = "remember"
+)
 
 func NewLoginWindow() (*LoginWindow, error) {
 	formVSpacer := declarative.VSpacer{
@@ -27,15 +29,19 @@ func NewLoginWindow() (*LoginWindow, error) {
 	}
 	formFont := NewFont(15, true)
 
-	windowWidth := 800
-	windowHeight := 600
-
 	var db *walk.DataBinder
 	loginWindow := new(LoginWindow)
+	rememberVal, _ := settings.Get(remember)
+	if rememberVal == "true" {
+		loginWindow.Remember = true
+		loginWindow.Number, _ = settings.Get(number)
+		loginWindow.Username, _ = settings.Get(username)
+		loginWindow.Password, _ = settings.Get(password)
+	}
+
 	err := declarative.Dialog{
-		AssignTo: &loginWindow.Dialog,
-		Title:    WindowTitle,
-		// Size:      declarative.Size{Width: windowWidth, Height: windowHeight},
+		AssignTo:  &loginWindow.Dialog,
+		Title:     WindowTitle,
 		Layout:    declarative.Grid{MarginsZero: true, Columns: 2},
 		FixedSize: true,
 		Children: []declarative.Widget{
@@ -133,17 +139,16 @@ func NewLoginWindow() (*LoginWindow, error) {
 								return
 							}
 
-							declarative.Dialog{
-								Title:  "显示输入框的值",
-								Layout: declarative.VBox{},
-								Children: []declarative.Widget{
-									declarative.Label{Text: loginWindow.Number},
-									declarative.Label{Text: loginWindow.Username},
-									declarative.Label{Text: loginWindow.Password},
-									declarative.Label{Text: fmt.Sprintf("%t", loginWindow.Remember)},
-									declarative.Label{Text: "Test dialog"},
-								},
-							}.Run(nil)
+							_ = settings.Put(number, loginWindow.Number)
+							_ = settings.Put(username, loginWindow.Username)
+							_ = settings.Put(password, loginWindow.Password)
+							_ = settings.Put(remember, fmt.Sprintf("%t", loginWindow.Remember))
+
+							err := settings.Save()
+							if err != nil {
+								walk.MsgBox(loginWindow, "记住失败", fmt.Sprintf("%s", err.Error()), walk.MsgBoxIconError)
+								return
+							}
 
 							if loginWindow.Number != "" {
 								loginWindow.Accept()
@@ -162,14 +167,7 @@ func NewLoginWindow() (*LoginWindow, error) {
 	}.Create(nil)
 
 	if err == nil {
-		width, height := GetWinScreen()
-		walk.MsgBox(loginWindow, "屏幕长宽", fmt.Sprintf("长: %d, 宽: %d", width, height), walk.MsgBoxIconInformation)
-		loginWindow.SetBounds(walk.Rectangle{
-			X:      500,
-			Y:      500,
-			Width:  windowWidth,
-			Height: windowHeight,
-		})
+		Center(loginWindow, windowWidth, windowHeight)
 	}
 
 	return loginWindow, err

@@ -1,12 +1,21 @@
 package repos
 
-import "log"
+import (
+	"github.com/sirupsen/logrus"
+	"log"
+)
 
-func FindUser() {
-	row := db.QueryRow("SELECT * FROM USER LIMIT 1")
+func FetchUser() {
+	row := db.QueryRowx("SELECT * FROM USER LIMIT 1")
 	if row.Err() != nil {
 		log.Fatalln(row.Err())
 	}
 
-	log.Println(row)
+	user := make(map[string]interface{})
+	err := row.MapScan(user)
+	if err != nil {
+		logrus.Error(err)
+	}
+
+	logrus.Infof("User: %+v", user)
 }

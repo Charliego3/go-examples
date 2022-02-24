@@ -11,7 +11,7 @@ func main() {
 	milliseconds := apis.Milliseconds()
 	log.Println("服务器时间:", milliseconds, times.Parse(milliseconds))
 
-	repos.FindUser()
+	repos.FetchUser()
 
 	// resp, err := apis.LoginV5("18929387993", "yy12347890", "6519763", true)
 	// if err != nil {
