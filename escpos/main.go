@@ -1,14 +1,18 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"github.com/czytcn/escpos"
 	usbdrivedetector "github.com/deepakjois/gousbdrivedetector"
 	"github.com/google/gousb"
 	gep "github.com/mect/go-escpos"
+	"github.com/olekukonko/tablewriter"
 	"github.com/pzl/usb"
 	"github.com/sirupsen/logrus"
 	"github.com/tarm/serial"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -189,93 +193,93 @@ func goUSB() {
 	// }
 	// defer done()
 
-	// var oe *gousb.OutEndpoint
-	// cfg, err := device.Config(1)
-	// if err != nil {
-	// 	panic(err)
+	var oe *gousb.OutEndpoint
+	cfg, err := device.Config(1)
+	if err != nil {
+		panic(err)
+	}
+
+	intf, err := cfg.Interface(0, 0)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	defer intf.Close()
+	// for _, desc := range dev.Desc.Configs[0].Interfaces[0].AltSettings[0].Endpoints {
+	// 	if desc.Direction == gousb.EndpointDirectionOut {
+	oe, _ = intf.OutEndpoint(2)
+	// 		break
+	// 	}
 	// }
-	//
-	// intf, err := cfg.Interface(0, 0)
-	// if err != nil {
-	// 	logrus.Fatal(err)
-	// }
-	//
-	// defer intf.Close()
-	// // for _, desc := range dev.Desc.Configs[0].Interfaces[0].AltSettings[0].Endpoints {
-	// // 	if desc.Direction == gousb.EndpointDirectionOut {
-	// oe, _ = intf.OutEndpoint(2)
-	// // 		break
-	// // 	}
-	// // }
-	//
-	// w := bufio.NewWriter(oe)
-	// p := escpos.New(w)
-	//
-	// // p.Verbose = true
-	// p.SetFont("B")
-	//
-	// p.Init()
-	// // p.Beep(4)
-	// p.SetFontSize(2, 3)
-	// p.SetReverse(0)
-	// p.WriteGBK("简体字转繁体字")
-	// p.SetFontSize(1, 1)
-	// p.Formfeed()
-	// p.Write("test2")
-	//
-	// p.SetEmphasize(1)
-	// p.Write("hello")
-	// p.Formfeed()
-	// // png, _ = qrcode.Encode("https://www.bing.com", qrcode.Low, 256)
-	// // img, _, _ := image.Decode(bytes.NewReader(png))
-	// // p.SetAlign("center")
-	// // p.PrintImage(img)
-	//
-	// p.SetAlign("left")
-	// p.SetUnderline(1)
-	// p.Write("hello")
-	// p.SetMoveX(20)
-	// p.Write("hello")
-	// p.SetAlign("right")
-	// p.Write("right")
-	// p.Linefeed()
-	// p.SetAlign("left")
-	//
-	// p.SetEmphasize(0)
-	// p.SetReverse(0)
-	// p.SetUnderline(0)
-	//
-	// data := [][]string{
-	// 	[]string{"简体字转繁体字简体", "500"},
-	// 	[]string{"The Ruby", "288"},
-	// 	[]string{"The Ugly", "120"},
-	// 	[]string{"The Gopher", "800"},
-	// }
-	// tableString := &strings.Builder{}
-	// table := tablewriter.NewWriter(tableString)
-	// // table.SetColMinWidth(0, 15)
-	// table.SetHeader([]string{"名称", "数量"})
-	//
-	// for _, v := range data {
-	// 	table.Append(v)
-	// }
-	// // table.SetCaption(true, "这是标题")
-	// // table.SetRowSeparator("-")
-	// // table.SetAlignment(tablewriter.ALIGN_LEFT)
-	// table.SetAutoFormatHeaders(true)
-	// table.SetAutoMergeCells(true)
-	// table.SetAutoWrapText(true)
-	// table.SetBorder(true)
-	// table.Render() // Send output
-	// p.SetFontSize(1, 1)
-	// p.WriteGBK(tableString.String())
-	// p.Linefeed()
-	// p.Write("test")
-	// p.FormfeedD(1)
-	//
-	// p.Cut()
-	//
-	// w.Flush()
+
+	w := bufio.NewWriter(oe)
+	p := escpos.New(w)
+
+	// p.Verbose = true
+	p.SetFont("B")
+
+	p.Init()
+	// p.Beep(4)
+	p.SetFontSize(2, 3)
+	p.SetReverse(0)
+	p.WriteGBK("简体字转繁体字")
+	p.SetFontSize(1, 1)
+	p.Formfeed()
+	p.Write("test2")
+
+	p.SetEmphasize(1)
+	p.Write("hello")
+	p.Formfeed()
+	// png, _ = qrcode.Encode("https://www.bing.com", qrcode.Low, 256)
+	// img, _, _ := image.Decode(bytes.NewReader(png))
+	// p.SetAlign("center")
+	// p.PrintImage(img)
+
+	p.SetAlign("left")
+	p.SetUnderline(1)
+	p.Write("hello")
+	p.SetMoveX(20)
+	p.Write("hello")
+	p.SetAlign("right")
+	p.Write("right")
+	p.Linefeed()
+	p.SetAlign("left")
+
+	p.SetEmphasize(0)
+	p.SetReverse(0)
+	p.SetUnderline(0)
+
+	data := [][]string{
+		[]string{"简体字转繁体字简体", "500"},
+		[]string{"The Ruby", "288"},
+		[]string{"The Ugly", "120"},
+		[]string{"The Gopher", "800"},
+	}
+	tableString := &strings.Builder{}
+	table := tablewriter.NewWriter(tableString)
+	// table.SetColMinWidth(0, 15)
+	table.SetHeader([]string{"名称", "数量"})
+
+	for _, v := range data {
+		table.Append(v)
+	}
+	// table.SetCaption(true, "这是标题")
+	// table.SetRowSeparator("-")
+	// table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAutoFormatHeaders(true)
+	table.SetAutoMergeCells(true)
+	table.SetAutoWrapText(true)
+	table.SetBorder(true)
+	table.Render() // Send output
+	p.SetFontSize(1, 1)
+	p.WriteGBK(tableString.String())
+	p.Linefeed()
+	p.Write("test")
+	p.FormfeedD(1)
+
+	p.Cut()
+
+	w.Flush()
 }
 
 func goescpos() {

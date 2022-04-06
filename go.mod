@@ -10,6 +10,7 @@ require (
 	github.com/alecthomas/chroma v0.8.2
 	github.com/andlabs/ui v0.0.0-20200610043537-70a69d6ae31e
 	github.com/caseymrm/menuet v1.0.1
+	github.com/czytcn/escpos v1.0.5 // indirect
 	github.com/deepakjois/gousbdrivedetector v0.0.0-20161027045320-4d29e4d6f1b7
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/extrame/ole2 v0.0.0-20160812065207-d69429661ad7 // indirect
@@ -37,6 +38,7 @@ require (
 	github.com/mect/go-escpos v0.0.0-20210325080415-f7f1d2244377
 	github.com/muesli/termenv v0.8.1
 	github.com/multiformats/go-multihash v0.0.16 // indirect
+	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/progrium/macdriver v0.2.0
 	github.com/pzl/usb v0.0.0-20190724173107-fe969ccd4402
