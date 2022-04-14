@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Tradingbot Robot Details</title>
+    <link href="https://www.monolisa.dev/api/fonts/initial" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+<div class="flex flex-col items-center h-screen overflow-hidden">
+    <div class="p-5"
+        style="font-family: ml, Monaco, monospace;font-style: italic;font-feature-settings: 'ss02' 1;font-size: 30px;">
+        Tradingbot Robot Details
+    </div>
+    <div class="w-full h-full px-4 pb-4 flex flex-wrap gap-5 justify-center overflow-y-auto">
+        {{ range $index, $ele := . }}
+            {{ with $ele }}
+                {{ if eq $index 0 }}
+                    {{ if ne .btc.Total.String .robot.Coin.String }}
+                        {{ if ge .robot.Status 2 }}
+                            <div class='w-full max-h-full flex flex-col bg-gray-200 rounded-lg
+                                shadow-xl grow content-start divide-y divide-y-2 divide-dashed divide-gray-400'>
+                        {{ else }}
+                            <div class='w-full max-h-full flex flex-col bg-red-100 rounded-lg
+                                shadow-xl grow content-start divide-y divide-y-2 divide-dashed divide-gray-400'>
+                        {{ end }}
+                    {{ else }}
+                        <div class='w-full max-h-full flex flex-col bg-gray-200 rounded-lg
+                            shadow-xl grow content-start divide-y divide-y-2 divide-dashed divide-gray-400'>
+                    {{ end }}
+                {{ else }}
+                    {{ if ne .btc.Total.String .robot.Coin.String }}
+                        {{ if ge .robot.Status 2 }}
+                            <div class='max-h-full flex flex-col bg-gray-200 rounded-lg
+                                                    shadow-xl grow content-start divide-y divide-y-2 divide-dashed divide-gray-400'>
+                        {{ else }}
+                            <div class='max-h-full flex flex-col bg-red-100 rounded-lg
+                                            shadow-xl grow content-start divide-y divide-y-2 divide-dashed divide-gray-400'>
+                        {{ end }}
+                    {{ else }}
+                        <div class='max-h-full flex flex-col bg-gray-200 rounded-lg
+                            shadow-xl grow content-start divide-y divide-y-2 divide-dashed divide-gray-400'>
+                    {{ end }}
+                {{ end }}
+                    <div class="p-3">
+                        {{ template "robotDetail" .robot }}
+                        <div class="flex gap-x-5">
+                            <div>
+                                <span class="font-bold text-lg text-red-800">BTC</span>:
+                                <span class="font-semibold text-base text-amber-800">{{ .btc.Total }}</span> -
+                                <span class="font-semibold text-base text-green-800">{{ .btc.Available }}</span> /
+                                <span class="font-semibold text-base text-orange-800">{{ .btc.Freeze }}</span>
+                            </div>
+                            <div>
+                                <span class="font-bold text-lg text-red-800">QC</span>:
+                                <span class="font-semibold text-base text-amber-800">{{ .qc.Total }}</span> -
+                                <span class="font-semibold text-base text-green-800">{{ .qc.Available }}</span> /
+                                <span class="font-semibold text-base text-orange-800">{{ .qc.Freeze }}</span>
+                            </div>
+                        </div>
+                        {{ with .params }}
+                        <div class="grid grid-cols-3 text-gray-500 text-sm">
+                            <span>UpperPrice: {{ .UpperPrice }}</span>
+                            <span>StopUpperPrice: {{ .StopUpperPrice }}</span>
+                            <span>StopUpper: {{ .StopUpper }}</span>
+                        </div>
+                        <div class="grid grid-cols-3 text-gray-500 text-sm">
+                            <span>LowerPrice: {{ .LowerPrice }}</span>
+                            <span>StopLowerPrice: {{ .StopLowerPrice }}</span>
+                            <span>StopLower: {{ .StopLower }}</span>
+                        </div>
+                        {{ end }}
+                    </div>
+                    <div class="flex items-center justify-center">
+                        <span class="font-bold text-lg text-red-500">{{ .price }}</span>
+                    </div>
+                    <div class="grid grid-cols-2 overflow-y-auto">
+                        <div class="p-3">{{ template "orderList" .buys }}</div>
+                        <div class="p-3">{{ template "orderList" .sells }}</div>
+                    </div>
+                </div>
+            {{ end }}
+        {{ end }}
+    </div>
+<!--        <h1>这是error: {{ . }}</h1>-->
+</div>
+    <script type="application/javascript">
+        // window.setTimeout(function () {
+        //     window.location.reload();
+        // }, 1000);
+    </script>
+</body>
+</html>
+
+{{ define "orderList" }}
+<div class="flex justify-between">
+    <div class="flex flex-col gap-y-1">
+        {{ range . }}
+            {{ template "order" . }}
+        {{ end }}
+    </div>
+
+    <div class="pr-2 grid grid-cols-2">
+        {{ range . }}
+            <span class="text-blue-400">{{ .Count }}</span>
+            <span class="text-pink-400 text-right">{{ .Rate }}</span>
+        {{ end }}
+    </div>
+</div>
+{{ end }}
+
+{{ define "order" }}
+<div class="flex items-center">
+    <div class="flex gap-x-2">
+        <div class="bg-slate-400 rounded w-8 h-6 text-center">
+            <span class="py-[2px] text-white">{{ .GridIndex }}</span>
+        </div>
+        {{ if .IsBuy }}
+        <span class="text-green-600">{{ .OrderPrice }}</span>
+        {{ else }}
+        <span class="text-red-600">{{ .OrderPrice }}</span>
+        {{ end }}
+    </div>
+</div>
+{{ end }}
+
+{{ define "robotDetail" }}
+<div class="flex gap-4 items-baseline">
+    <h1 class="text-lg font-bold">ID: {{ .ID }}</h1>
+    <span>U:{{ .UserID }}[{{ .Username }}]</span>
+    <span class="font-semibold">
+        {{ if eq .StrategyId 15 }}
+            经典网格
+        {{ else if eq .StrategyId 16 }}
+            正向网格
+        {{ else if eq .StrategyId 17 }}
+            正向网格
+        {{ end }}
+    </span>
+    {{ if eq .Status -1 }}
+        <span class="bg-gray-700 px-1 rounded text-white">正在转入资金</span>
+    {{ else if eq .Status 0 }}
+        <span class="bg-yellow-700 px-1 rounded text-white">待运行</span>
+    {{ else if eq .Status 1 }}
+        <span class="bg-green-700 px-1 rounded text-white">正在运行</span>
+    {{ else if eq .Status 2 }}
+        <span class="bg-red-700 px-1 rounded text-white">已删除</span>
+    {{ else if eq .Status 3 }}
+        <span class="bg-teal-700 px-1 rounded text-white">正在停止</span>
+    {{ else if eq .Status 4 }}
+        <span class="bg-indigo-700 px-1 rounded text-white">正在转出资产</span>
+    {{ else if eq .Status 5 }}
+        <span class="bg-amber-700 px-1 rounded text-white">已停止完成</span>
+    {{ end }}
+</div>
+<div class="flex gap-4 items-baseline">
+    <span class="text-indigo-800">
+        Asset: {{ .Asset }}
+        {{ if .Buy }}
+            QC
+        {{ else }}
+            BTC
+        {{ end }}
+    </span>
+    <span class="text-orange-700">
+        Coin: {{ .Coin }} BTC
+    </span>
+    <span class="text-sky-700">
+        Fait: {{ .Fait }} QC
+    </span>
+</div>
+<div class="flex gap-4 items-baseline">
+    <span class="text-indigo-800">
+        Income: {{ .Income }} QC
+    </span>
+    <span class="text-orange-700">
+        EIncome: {{ .EIncome }} QC
+    </span>
+    <span class="text-sky-700">
+        TIncome: {{ .TIncome }} QC
+    </span>
+</div>
+<div class="flex gap-4 items-baseline">
+    <span>
+        {{ if .Buy }}
+            <span class="bg-amber-700 px-1 py-[2px] rounded text-white">买入</span>
+        {{ else }}
+            <span class="bg-amber-700 px-1 py-[2px] rounded text-white">卖出</span>
+        {{ end }}
+    </span>
+    <span class="text-orange-700">
+        Create: {{ .CreateAt.Time.Format "01-02 15:04:05" }}
+    </span>
+    <span class="text-sky-700">
+        Start: {{ .StartAt.Time.Format "01-02 15:04:05" }}
+    </span>
+</div>
+{{ end }}

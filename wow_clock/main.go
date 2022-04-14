@@ -117,7 +117,7 @@ func clockIn(item cocoa.NSMenuItem) func(objc.Object) {
 
 func addCron() {
 	id, err := cc.AddFunc("0 0 9,19 * * 1,2,3,4,5,6", func() {
-		//id, err := cc.AddFunc("0 0/1 * * * ?", func() {
+		// id, err := cc.AddFunc("0 0/1 * * * ?", func() {
 		hour := time.Now().Hour()
 		if hour > 12 {
 			request("144", "1637665332707", "71b4dff1679e220c956527a358b3257f",
@@ -126,7 +126,7 @@ func addCron() {
 			request("144", "1637803346765", "c7415cbd0d2cea64949993504a980b91",
 				`{"wowId": "82a0f47a80e3431324e0efac32036d36", "clockInUserName": Whimthen, "clockInAddress": %E6%B7%B1%E5%9C%B3, "clockInType": "1", "remark": }`)
 		}
-		//golog.Info(open)
+		// golog.Info(open)
 	})
 	if err != nil {
 		panic(err)

@@ -1,0 +1,189 @@
+{
+    "basic": {
+        "domain": ":9202",
+        "lastRegister": 15200000049,
+        "tradeUrl": "http://tttrade2.100-130.net/api/",
+        "tradingUrl": "http://192.168.1.227:48620"
+    },
+    "viewRobotUsers": [
+        362683
+    ],
+    "databases": [
+        {
+            "url": "mysql://root:iPYDU0o3MRQOreEW@172.16.100.130:3306/strategy",
+            "options": {
+                "maxOpenConns": 2,
+                "maxIdleConns": 2
+            }
+        }
+    ],
+    "tradeUsers": [
+        {
+            "userId": 362652,
+            "username": "15200000021",
+            "apiKey": "c5c8e7a7-92e2-4314-9ca3-c869911d7905",
+            "apiSecret": "add4417a-2554-4d4a-9832-8ce1cc30c6aa"
+        },
+        {
+            "userId": 362655,
+            "username": "15200000023",
+            "apiKey": "957b00e6-9208-4a8d-aa28-0d3928a53398",
+            "apiSecret": "6cb09999-4c1c-44f5-bd0a-a65af48de15b"
+        },
+        {
+            "userId": 362659,
+            "username": "15200000024",
+            "apiKey": "3df3a7e7-8727-45f9-bf85-3125931e5306",
+            "apiSecret": "15616e9d-50b3-4571-9a52-86998c11e5a5"
+        },
+        {
+            "userId": 362660,
+            "username": "15200000025",
+            "apiKey": "93d54d46-a018-4d6c-8dec-80f5a924bf35",
+            "apiSecret": "2a42b901-420a-425f-b909-97a18b0daf45"
+        },
+        {
+            "userId": 362661,
+            "username": "15200000026",
+            "apiKey": "1505b508-db38-43ac-9238-5526f60ce710",
+            "apiSecret": "ee241fd6-9865-4e45-a80d-59cd526f0d00"
+        },
+        {
+            "userId": 362662,
+            "username": "15200000027",
+            "apiKey": "1c4322e7-ccf0-44b0-abce-c1e62873fc6a",
+            "apiSecret": "952cbbcb-7743-4fda-8602-b890bdd83721"
+        },
+        {
+            "userId": 362663,
+            "username": "15200000028",
+            "apiKey": "ec52805a-a9cf-4f08-aafb-3e7d7436147c",
+            "apiSecret": "11f66640-a49c-41ab-b6b2-d34b90dc3c4b"
+        },
+        {
+            "userId": 362664,
+            "username": "15200000029",
+            "apiKey": "9222d12e-2c61-4322-a93e-8db6887905d0",
+            "apiSecret": "37d7daaa-7780-48ed-bbbc-0a5a9fc39f2e"
+        },
+        {
+            "userId": 362665,
+            "username": "15200000030",
+            "apiKey": "27c81a88-e8df-4993-9867-754492fe126a",
+            "apiSecret": "4227b51c-63b6-4c32-af74-c4c6d1705cde"
+        },
+        {
+            "userId": 362666,
+            "username": "15200000031",
+            "apiKey": "c1834ff7-674e-424e-9b3b-45941fea483e",
+            "apiSecret": "e4b8ceaf-e3a8-4d2a-b2b4-264bed867ef5"
+        },
+        {
+            "userId": 362675,
+            "username": "15200000040",
+            "apiKey": "46b4b3be-dfb9-4f57-bc38-7d7ec4dd151e",
+            "apiSecret": "c8c77dad-0aa3-44bf-b8c6-13b2323322c3"
+        },
+        {
+            "userId": 362676,
+            "username": "15200000041",
+            "apiKey": "f13057a5-e996-4d34-831d-c56f8bf2dfbd",
+            "apiSecret": "db1ed6a9-4044-4b23-bc2e-5fc3c94775a9"
+        },
+        {
+            "userId": 362677,
+            "username": "15200000042",
+            "apiKey": "c54490f2-583e-42c2-8d54-7e48bd367db0",
+            "apiSecret": "42a17e45-5f18-4774-bed7-477db4df8dd8"
+        },
+        {
+            "userId": 362678,
+            "username": "15200000043",
+            "apiKey": "12c20609-85b5-47de-a158-700c29fd1f29",
+            "apiSecret": "ab45d796-10cf-4433-a946-9a318553e6e3"
+        },
+        {
+            "userId": 362679,
+            "username": "15200000044",
+            "apiKey": "98bf6d2a-52a6-4a2e-a9dd-c9222b4e82c2",
+            "apiSecret": "aa1f84a9-2900-4471-ae60-bd8010dc9207"
+        }
+    ],
+    "tradingUsers": [
+        {
+            "userId": 362667,
+            "username": "15200000032",
+            "apiKey": "186bcfbd-57e0-4c4f-8c88-a33c2440bfc1",
+            "apiSecret": "49a6b87e-c672-46dc-b151-9f2192f08ecc"
+        },
+        {
+            "userId": 362668,
+            "username": "15200000033",
+            "apiKey": "be6cd7a9-972b-4edb-91db-aeca4845d7b3",
+            "apiSecret": "5ce70982-8be8-4826-bbe9-01d2cad3755a"
+        },
+        {
+            "userId": 362669,
+            "username": "15200000034",
+            "apiKey": "818bd060-c6f1-4d1a-8756-25dc0f1f1fe5",
+            "apiSecret": "37ce8578-2bf4-48c9-b899-906dc5389a5a"
+        },
+        {
+            "userId": 362670,
+            "username": "15200000035",
+            "apiKey": "e3a50c0d-d468-4fe5-aea6-c1b628c4367c",
+            "apiSecret": "5ef0c92c-0f1a-4328-8aec-97ce99408eea"
+        },
+        {
+            "userId": 362671,
+            "username": "15200000036",
+            "apiKey": "77914f08-25f8-455c-b679-53271a674091",
+            "apiSecret": "e4e36334-e740-46ca-af42-8d662cf27c0a"
+        },
+        {
+            "userId": 362672,
+            "username": "15200000037",
+            "apiKey": "41398804-7c5f-4da9-8f18-1dd1765948b6",
+            "apiSecret": "2a500b1d-269a-41df-a002-457543ae4bb2"
+        },
+        {
+            "userId": 362673,
+            "username": "15200000038",
+            "apiKey": "b4eccdb3-687f-4726-885f-59c82ab93423",
+            "apiSecret": "a3bb91ba-f426-4557-8c78-97069baa3415"
+        },
+        {
+            "userId": 362674,
+            "username": "15200000039",
+            "apiKey": "c8309ab0-4bcd-4ed4-8cc8-8eb60e338c4b",
+            "apiSecret": "6832ec9c-657d-4665-86e9-a78e246c87cb"
+        },
+        {
+            "userId": 362680,
+            "username": "15200000045",
+            "apiKey": "e578b62e-3735-452a-80e8-e6bbd18482d5",
+            "apiSecret": "edcc27bd-c64d-4115-8113-d8aab51d9bd4"
+        },
+        {
+            "userId": 362681,
+            "username": "15200000046",
+            "apiKey": "0e6ab9c9-aefd-4d60-ad9c-107a6c011616",
+            "apiSecret": "3001ef87-a32b-45a0-93ce-0dfe8017e9eb"
+        },
+        {
+            "userId": 362682,
+            "username": "15200000047",
+            "apiKey": "db51753f-3462-4c62-be83-9875fd814048",
+            "apiSecret": "62e89d8b-53e2-44fd-84aa-3412b22f1964"
+        },
+        {
+            "userId": 362683,
+            "username": "15200000048",
+            "apiKey": "01352224-9f82-4650-bebe-bba7ba730c68",
+            "apiSecret": "a38de8d9-c3e2-4102-a7b9-ce0d97c173a4"
+        }
+    ],
+    "websocket": {
+        "address": "ws://ttapi2.100-130.net/websocket"
+    }
+}
