@@ -147,28 +147,12 @@ func (t *Trading) CreateRobot() (err error) {
 	t.logger.Debugf("创建机器人参数: %s", params.Encode())
 
 	var resp Response[Robot]
-	err = timeout.GET(t.getRequestURL("saveStrategy")).SetQuery(params.Encode()).BindJSON(&resp).Do()
+	err = timeout.GET(getTradingRequestURL("saveStrategy")).SetQuery(params.Encode()).BindJSON(&resp).Do()
 	if err != nil || !resp.Success() {
 		return fmt.Errorf("创建机器人失败 -> %s%v", resp.ResMsg.Message, err)
 	}
 
 	t.robot = resp.Payload
-	return nil
-}
-
-func (t *Trading) Shutdown() error {
-	params := url.Values{
-		"userId":           []string{strconv.Itoa(t.user.ID)},
-		"id":               []string{t.user.Username},
-		"exchangeWithStop": []string{t.market.Name},
-	}
-
-	var resp Response[any]
-	err := timeout.GET(t.getRequestURL("shutdown")).SetQuery(params.Encode()).BindJSON(&resp).Do()
-	if err != nil {
-		t.logger.Errorf("创建机器人失败 -> %v", err)
-		return err
-	}
 	return nil
 }
 
@@ -244,7 +228,34 @@ func (t *Trading) randomExchange() string {
 	return "false"
 }
 
-func (t *Trading) getRequestURL(method string) string {
+func ExtractIncome(robotId int) ([]byte, error) {
+	params := url.Values{"id": []string{strconv.Itoa(robotId)}}
+	var resp []byte
+	err := timeout.GET(getTradingRequestURL("extractIncome")).SetQuery(params.Encode()).BindBody(&resp).Do()
+	if err != nil {
+		logger.Errorf("提取收益[%d]失败 -> %v", robotId, err)
+		return resp, err
+	}
+	return resp, nil
+}
+
+func Shutdown(userId, robotId int, exchange bool) ([]byte, error) {
+	params := url.Values{
+		"userId":           []string{strconv.Itoa(userId)},
+		"id":               []string{strconv.Itoa(robotId)},
+		"exchangeWithStop": []string{strconv.FormatBool(exchange)},
+	}
+
+	var resp []byte
+	err := timeout.GET(getTradingRequestURL("shutdown")).SetQuery(params.Encode()).BindBody(&resp).Do()
+	if err != nil {
+		logger.Errorf("停止机器人[%d:%d]失败 -> %v", userId, robotId, err)
+		return resp, err
+	}
+	return resp, nil
+}
+
+func getTradingRequestURL(method string) string {
 	requestURL := Settings.Basic.TradingUrl
 	if strings.HasSuffix(requestURL, "/") {
 		requestURL = requestURL[:len(requestURL)-1]

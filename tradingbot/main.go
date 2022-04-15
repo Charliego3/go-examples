@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/signal"
 	"sort"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -52,6 +53,7 @@ func main() {
 	tu := flag.Int("tu", 2, "trade users count")
 	// ru := flag.Int("ru", 5, "trading users count")
 	td := flag.Duration("td", time.Second, "trade interval duration")
+	test := flag.Bool("test", false, "no trade")
 	flag.Parse()
 
 	cgPath = *cf
@@ -96,8 +98,10 @@ func main() {
 
 	go serve(*tf)
 	time.Sleep(time.Second)
-	// <-make(chan struct{})
-	// return
+	if *test {
+		<-make(chan struct{})
+		return
+	}
 
 	// StartTradingRobot(*Settings.TradingUsers[1], market)
 	// return
@@ -165,10 +169,10 @@ WHERE userId = ? AND robotId = ? AND status = 1 AND (orderStatus = 1 OR orderSta
 			userIds = append(userIds, userId)
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
 
-		querySQL := "SELECT id, strategyId, userId, status, userName, initialAsset, coinAmount, faitAmount, income, extractedIncome, totalIncome, isBuy, createTime, startTime, params FROM robot WHERE userId IN (?) AND marketName = 'btc_qc' ORDER BY status"
+		querySQL := "SELECT id, strategyId, userId, status, userName, initialAsset, coinAmount, faitAmount, income, extractedIncome, totalIncome, isBuy, createTime, startTime, params FROM robot WHERE userId IN (?) AND marketName = 'btc_qc' ORDER BY status, createTime DESC"
 		// querySQL := "SELECT id, strategyId, userId, status, userName, initialAsset, coinAmount, faitAmount, income, extractedIncome, totalIncome, isBuy, createTime, startTime FROM robot ORDER BY id DESC LIMIT 10"
 		querySQL, args, err := sqlx.In(querySQL, userIds)
 		if err != nil {
@@ -179,7 +183,7 @@ WHERE userId = ? AND robotId = ? AND status = 1 AND (orderStatus = 1 OR orderSta
 		rows, err := db.QueryxContext(ctx, querySQL, args...)
 		// rows, err := db.Queryx(querySQL)
 		if err != nil {
-			_ = page.Execute(w, err.Error())
+			logger.Errorf("查询Robot失败: %v", err)
 			return
 		}
 
@@ -198,13 +202,13 @@ WHERE userId = ? AND robotId = ? AND status = 1 AND (orderStatus = 1 OR orderSta
 			var robot Robot
 			err := rows.StructScan(&robot)
 			if err != nil {
-				_ = page.Execute(w, err.Error())
+				logger.Errorf("反序列化Robot失败: %v", err)
 				return
 			}
 
 			orderRows, err := db.QueryxContext(ctx, queryOrderList, robot.UserID, robot.ID, robot.UserID, robot.ID)
 			if err != nil {
-				_ = page.Execute(w, err.Error())
+				logger.Errorf("查询OrderList失败: %v", err)
 				return
 			}
 
@@ -214,7 +218,7 @@ WHERE userId = ? AND robotId = ? AND status = 1 AND (orderStatus = 1 OR orderSta
 				var order Order
 				err := orderRows.StructScan(&order)
 				if err != nil {
-					_ = page.Execute(w, err.Error())
+					logger.Errorf("反序列化失败Order: %v", err)
 					return
 				}
 
@@ -231,10 +235,10 @@ WHERE userId = ? AND robotId = ? AND status = 1 AND (orderStatus = 1 OR orderSta
 			}
 
 			sort.Slice(buys, func(i, j int) bool {
-				return buys[i].GridIndex < buys[j].GridIndex
+				return buys[i].OrderPrice.Cmp(buys[j].OrderPrice) > 0
 			})
 			sort.Slice(sells, func(i, j int) bool {
-				return sells[i].GridIndex > sells[j].GridIndex
+				return sells[i].OrderPrice.Cmp(sells[j].OrderPrice) < 0
 			})
 
 			var params Params
@@ -243,26 +247,26 @@ WHERE userId = ? AND robotId = ? AND status = 1 AND (orderStatus = 1 OR orderSta
 			robotParams := robot.Params[:index] + robot.Params[lastIndex+3:]
 			err = json.Unmarshal(utils.Bytes(robotParams), &params)
 			if err != nil {
-				logger.Errorf("反序列化失败: %v", err)
-				_ = page.Execute(w, err.Error())
+				logger.Errorf("反序列化失败Params: %v", err)
 				return
 			}
 
 			var subUserId int
 			err = db.GetContext(ctx, &subUserId, "SELECT subUserId FROM account WHERE id = ?", params.AccountId)
 			if err != nil {
-				_ = page.Execute(w, err.Error())
+				logger.Errorf("查询子账号失败: %v", err)
 				return
 			}
 
 			funds, err := GetFunds(subUserId, "btc", "qc")
 			if err != nil {
-				_ = page.Execute(w, err.Error())
+				logger.Errorf("获取资产失败: %v", err)
 				return
 			}
 
 			// logger.Warnf("UserFund: %+v", funds)
 
+			robot.SubUserID = subUserId
 			m := make(map[string]interface{})
 			m["robot"] = robot
 			m["buys"] = buys
@@ -275,6 +279,34 @@ WHERE userId = ? AND robotId = ? AND status = 1 AND (orderStatus = 1 OR orderSta
 		}
 
 		_ = page.Execute(w, rtn)
+	})
+
+	http.HandleFunc("/shutdown", func(w http.ResponseWriter, r *http.Request) {
+		u := r.URL.Query().Get("userId")
+		ri := r.URL.Query().Get("robotId")
+		e := r.URL.Query().Get("exchangeWithStop")
+
+		userId, _ := strconv.Atoi(u)
+		robotId, _ := strconv.Atoi(ri)
+		exchange, _ := strconv.ParseBool(e)
+
+		buf, err := Shutdown(userId, robotId, exchange)
+		if err != nil {
+			_, _ = w.Write([]byte(err.Error()))
+			return
+		}
+		_, _ = w.Write(buf)
+	})
+
+	http.HandleFunc("/extractIncome", func(w http.ResponseWriter, r *http.Request) {
+		ri := r.URL.Query().Get("robotId")
+		robotId, _ := strconv.Atoi(ri)
+		buf, err := ExtractIncome(robotId)
+		if err != nil {
+			_, _ = w.Write([]byte(err.Error()))
+			return
+		}
+		_, _ = w.Write(buf)
 	})
 
 	if err := http.ListenAndServe(":9090", nil); err != nil {

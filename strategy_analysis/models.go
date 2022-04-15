@@ -27,8 +27,10 @@ type GridRecord struct {
 	Status          int            `db:"status"`
 	Income4Symbol   BigDecimal     `db:"income4Symbol"`
 	TradeFee        BigDecimal     `db:"tradeFee"`
+	TradePrice      BigDecimal     `db:"tradePrice"`
 	TradeTime       Time           `db:"tradeTime"`
 	IsIocOrder      Bool           `db:"isIocOrder"`
+	SubUserId       int            `db:"subUserId"`
 }
 
 type Entrust struct {
@@ -88,7 +90,7 @@ type Robot struct {
 
 type Grid struct {
 	GridInfo     map[int]GridInfo `json:"gridInfo"`
-	GridAmount   int              `json:"gridAmout"`
+	GridAmount   int              `json:"gridAmount"`
 	Buy          bool             `json:"buy"`
 	LowerPrice   decimal.Decimal  `json:"lowerPrice"`
 	UpperPrice   decimal.Decimal  `json:"upperPrice"`

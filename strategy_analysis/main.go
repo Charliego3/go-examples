@@ -308,7 +308,7 @@ func analysis(record *GridRecord, first bool) {
 
 func parseGrid() {
 	params := []byte(robot.Params)
-	for i := 0; i <= 100; i++ {
+	for i := 0; i <= 150; i++ {
 		if bytes.Contains(params, []byte(fmt.Sprintf("%d:", i))) {
 			params = bytes.Replace(params, []byte(fmt.Sprintf("%d:", i)), []byte(fmt.Sprintf(`"%d":`, i)), 1)
 		} else {
@@ -351,7 +351,7 @@ var (
 	colors                 = []color.Attribute{
 		color.FgBlue,
 		color.FgHiRed,
-		//color.FgHiGreen,
+		// color.FgHiGreen,
 		color.FgYellow,
 		color.FgHiMagenta,
 		color.FgHiCyan,

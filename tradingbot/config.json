@@ -3,7 +3,7 @@
         "domain": ":9202",
         "lastRegister": 15200000049,
         "tradeUrl": "http://tttrade2.100-130.net/api/",
-        "tradingUrl": "http://192.168.1.227:48620"
+        "tradingUrl": "http://127.0.0.1:48620"
     },
     "viewRobotUsers": [
         362683

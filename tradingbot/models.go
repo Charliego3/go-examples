@@ -180,6 +180,7 @@ type Robot struct {
 	ID         int64           `json:"id,omitempty" db:"id"`
 	StrategyId int             `json:"strategyId,omitempty" db:"strategyId"`
 	UserID     int             `json:"userId,omitempty" db:"userId"`
+	SubUserID  int             `json:"subUserId,omitempty" db:"-"`
 	Status     int             `json:"status,omitempty" db:"status"`
 	Username   string          `json:"userName,omitempty" db:"userName"`
 	Asset      decimal.Decimal `json:"initialAsset,omitempty" db:"initialAsset"`

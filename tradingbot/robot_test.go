@@ -28,7 +28,7 @@ func TestCreateRobot(t *testing.T) {
 
 	userId := 362683
 	currency := "qc"
-	amount := decimal.NewFromInt(50000)
+	amount := decimal.NewFromInt(21500)
 	err = Recharge(userId, currency, amount)
 	if err != nil {
 		logger.Fatalf("充值失败: %v", err)
@@ -39,25 +39,23 @@ func TestCreateRobot(t *testing.T) {
 		"username":               []string{"15200000048"},
 		"market":                 []string{"btc_qc"},
 		"currency":               []string{currency},
-		"strategyId":             []string{"15"},
+		"strategyId":             []string{"16"},
 		"gridAmount":             []string{"150"},
 		"type":                   []string{"1"},
 		"totalAmount":            []string{amount.String()},
-		"lowerPrice":             []string{"30000"},
-		"upperPrice":             []string{"40000"},
+		"lowerPrice":             []string{"32000"},
+		"upperPrice":             []string{"39000"},
 		"triggerPrice":           []string{},
-		"exchangeWithStopLoss":   []string{"false"},
-		"exchangeWithStopProfit": []string{"false"},
+		"exchangeWithStopLoss":   []string{"true"},
+		"exchangeWithStopProfit": []string{"true"},
 	}
 
 	logger.Debugf("创建机器人参数: %s", params.Encode())
 
-	timeout := gout.NewWithOpt(gout.WithTimeout(time.Minute))
-	var resp Response[Robot]
-	err = timeout.GET("http://192.168.1.227:48620/api/fake/saveStrategy").SetQuery(params.Encode()).BindJSON(&resp).Do()
-	if err != nil || !resp.Success() {
-		logger.Fatalf("创建机器人失败 -> %s%v", resp.ResMsg.Message, err)
-	}
+	timeout := gout.NewWithOpt(gout.WithTimeout(time.Minute * 3))
+	var resp []byte
+	err = timeout.GET("http://127.0.0.1:48620/api/fake/saveStrategy").SetQuery(params.Encode()).BindBody(&resp).Do()
+	logger.Debugf("创建机器人响应 -> %s, %v", json.Get(resp, "resMsg").ToString(), err)
 }
 
 func initDatabases() {

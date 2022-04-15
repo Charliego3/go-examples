@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Tradingbot Robot Details</title>
     <link href="https://www.monolisa.dev/api/fonts/initial" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
@@ -18,14 +19,14 @@
                 {{ if eq $index 0 }}
                     {{ if ne .btc.Total.String .robot.Coin.String }}
                         {{ if ge .robot.Status 2 }}
-                            <div class='w-full max-h-full flex flex-col bg-gray-200 rounded-lg
+                            <div class='w-full max-h-[60%] flex flex-col bg-gray-200 rounded-lg
                                 shadow-xl grow content-start divide-y divide-y-2 divide-dashed divide-gray-400'>
                         {{ else }}
-                            <div class='w-full max-h-full flex flex-col bg-red-100 rounded-lg
+                            <div class='w-full max-h-[60%] flex flex-col bg-red-100 rounded-lg
                                 shadow-xl grow content-start divide-y divide-y-2 divide-dashed divide-gray-400'>
                         {{ end }}
                     {{ else }}
-                        <div class='w-full max-h-full flex flex-col bg-gray-200 rounded-lg
+                        <div class='w-full max-h-[60%] flex flex-col bg-gray-200 rounded-lg
                             shadow-xl grow content-start divide-y divide-y-2 divide-dashed divide-gray-400'>
                     {{ end }}
                 {{ else }}
@@ -43,41 +44,61 @@
                     {{ end }}
                 {{ end }}
                     <div class="p-3">
-                        {{ template "robotDetail" .robot }}
-                        <div class="flex gap-x-5">
-                            <div>
-                                <span class="font-bold text-lg text-red-800">BTC</span>:
-                                <span class="font-semibold text-base text-amber-800">{{ .btc.Total }}</span> -
-                                <span class="font-semibold text-base text-green-800">{{ .btc.Available }}</span> /
-                                <span class="font-semibold text-base text-orange-800">{{ .btc.Freeze }}</span>
+                        <div class="flex justify-between">
+                            <div class="">
+                                {{ template "robotDetail" .robot }}
+                                <div class="flex gap-x-5">
+                                    <div>
+                                        <span class="font-bold text-lg text-red-800">BTC</span>:
+                                        <span class="font-semibold text-base text-amber-800">{{ .btc.Total }}</span> -
+                                        <span class="font-semibold text-base text-green-800">{{ .btc.Available }}</span> /
+                                        <span class="font-semibold text-base text-orange-800">{{ .btc.Freeze }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-bold text-lg text-red-800">QC</span>:
+                                        <span class="font-semibold text-base text-amber-800">{{ .qc.Total }}</span> -
+                                        <span class="font-semibold text-base text-green-800">{{ .qc.Available }}</span> /
+                                        <span class="font-semibold text-base text-orange-800">{{ .qc.Freeze }}</span>
+                                    </div>
+                                </div>
+                                {{ with .params }}
+                                    <div class="grid grid-cols-3 text-gray-500 text-sm">
+                                        <span>UpperPrice: {{ .UpperPrice }}</span>
+                                        <span>StopUpperPrice: {{ .StopUpperPrice }}</span>
+                                        <span>StopUpper: {{ .StopUpper }}</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 text-gray-500 text-sm">
+                                        <span>LowerPrice: {{ .LowerPrice }}</span>
+                                        <span>StopLowerPrice: {{ .StopLowerPrice }}</span>
+                                        <span>StopLower: {{ .StopLower }}</span>
+                                    </div>
+                                {{ end }}
                             </div>
-                            <div>
-                                <span class="font-bold text-lg text-red-800">QC</span>:
-                                <span class="font-semibold text-base text-amber-800">{{ .qc.Total }}</span> -
-                                <span class="font-semibold text-base text-green-800">{{ .qc.Available }}</span> /
-                                <span class="font-semibold text-base text-orange-800">{{ .qc.Freeze }}</span>
-                            </div>
+                            {{ if le .robot.Status 1 }}
+                                <div class="flex flex-col place-content-end px-3 gap-2">
+                                    <button type="button" onclick="shutdown('{{ .robot.UserID }}', '{{ .robot.ID }}', '{{ .params.StopUpper }}', '{{ .params.StopLower }}')"
+                                            class="py-1 px-2 bg-red-800 rounded text-white text-center shadow-lg font-bold hover:bg-red-900 hover:cursor-pointer">
+                                        停止
+                                    </button>
+                                    <button type="button" onclick="extractIncome('{{ .robot.ID }}')"
+                                            class="py-1 px-2 bg-green-800 rounded text-white text-center shadow-lg font-bold hover:bg-green-900 hover:cursor-pointer">
+                                        提取收益
+                                    </button>
+                                </div>
+                            {{ end }}
                         </div>
-                        {{ with .params }}
-                        <div class="grid grid-cols-3 text-gray-500 text-sm">
-                            <span>UpperPrice: {{ .UpperPrice }}</span>
-                            <span>StopUpperPrice: {{ .StopUpperPrice }}</span>
-                            <span>StopUpper: {{ .StopUpper }}</span>
+                    </div>
+                    {{ if le .robot.Status 1 }}
+                        <div class="flex items-center justify-between pr-5 pl-3">
+                            <span class="font-bold text-lg text-indigo-500">{{ len .buys }}</span>
+                            <span class="font-bold text-lg text-red-500">{{ .price }}</span>
+                            <span class="font-bold text-lg text-indigo-500">{{ len .sells }}</span>
                         </div>
-                        <div class="grid grid-cols-3 text-gray-500 text-sm">
-                            <span>LowerPrice: {{ .LowerPrice }}</span>
-                            <span>StopLowerPrice: {{ .StopLowerPrice }}</span>
-                            <span>StopLower: {{ .StopLower }}</span>
+                        <div class="grid grid-cols-2 overflow-y-auto">
+                            <div class="p-3">{{ template "orderList" .buys }}</div>
+                            <div class="p-3">{{ template "orderList" .sells }}</div>
                         </div>
-                        {{ end }}
-                    </div>
-                    <div class="flex items-center justify-center">
-                        <span class="font-bold text-lg text-red-500">{{ .price }}</span>
-                    </div>
-                    <div class="grid grid-cols-2 overflow-y-auto">
-                        <div class="p-3">{{ template "orderList" .buys }}</div>
-                        <div class="p-3">{{ template "orderList" .sells }}</div>
-                    </div>
+                    {{ end }}
                 </div>
             {{ end }}
         {{ end }}
@@ -85,9 +106,35 @@
 <!--        <h1>这是error: {{ . }}</h1>-->
 </div>
     <script type="application/javascript">
-        // window.setTimeout(function () {
-        //     window.location.reload();
-        // }, 1000);
+        window.setTimeout(function () {
+            window.location.reload();
+        }, 5000);
+
+        function extractIncome(robotId) {
+            $.ajax({
+                url: 'extractIncome?robotId=' + robotId,
+                // dataType: 'json',
+                success: function (resp) {
+                    alert(resp);
+                },
+                error: function (_, textStatus, errorThrown) {
+                    alert("提取收益失败: " + textStatus + ", err: " + errorThrown);
+                }
+            });
+        }
+
+        function shutdown(userId, robotId, upper, lower) {
+            $.ajax({
+                url: 'shutdown?userId=' + userId + '&robotId=' + robotId + '&exchangeWithStop=' + ('true' === upper || 'true' === lower),
+                // dataType: 'json',
+                success: function (resp) {
+                    alert(resp);
+                },
+                error: function (_, textStatus, errorThrown) {
+                    alert("停止机器人失败: " + textStatus + ", err: " + errorThrown);
+                }
+            });
+        }
     </script>
 </body>
 </html>
@@ -127,7 +174,7 @@
 {{ define "robotDetail" }}
 <div class="flex gap-4 items-baseline">
     <h1 class="text-lg font-bold">ID: {{ .ID }}</h1>
-    <span>U:{{ .UserID }}[{{ .Username }}]</span>
+    <span>U:{{ .UserID }}:{{ .SubUserID }}[{{ .Username }}]</span>
     <span class="font-semibold">
         {{ if eq .StrategyId 15 }}
             经典网格
