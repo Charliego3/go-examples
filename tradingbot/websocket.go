@@ -234,6 +234,10 @@ func (w *WebsocketDialer) accept() {
 
 		dataType := DataType(json.Get(message, "dataType").ToString())
 
+		if dataType != QuickDepthType {
+			logger.Errorf("消息: %s", message)
+		}
+
 		r, ok := w.Receiver(dataType)
 		if !ok {
 			w.Logger.Warnf("消息没有接收者: %s, Message: %s", dataType, message)

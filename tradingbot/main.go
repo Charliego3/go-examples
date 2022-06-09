@@ -23,7 +23,7 @@ import (
 
 var (
 	Settings ConfigSettings
-	cgPath   = "./tradingbot/config.json"
+	cgPath   = "./config.json"
 
 	timeout = gout.NewWithOpt(gout.WithTimeout(time.Second * 10))
 )
@@ -152,7 +152,7 @@ func serve(tf string) {
 	queryOrderList := `SELECT g.gridIndex gridIndex, g.orderPrice orderPrice, g.isBuy isBuy, IF(SUM(c.hedgeCount) IS NULL, 0, SUM(c.hedgeCount)) count FROM gridrecordv2 g
 LEFT JOIN (SELECT gridIndex, COUNT(1) hedgeCount FROM gridrecordv2 a WHERE userId = ? AND robotId = ?
 AND isOrignOrder = FALSE AND status = 4 AND orderStatus = 2 GROUP BY gridIndex) c ON g.gridIndex = c.gridIndex
-WHERE userId = ? AND robotId = ? AND status = 1 AND (orderStatus = 1 OR orderStatus = 3) GROUP BY isBuy, orderPrice, gridIndex;`
+WHERE userId = ? AND robotId = ? AND status <= 1 GROUP BY isBuy, orderPrice, gridIndex;`
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		page, err := template.ParseFiles(tf)
@@ -172,7 +172,7 @@ WHERE userId = ? AND robotId = ? AND status = 1 AND (orderStatus = 1 OR orderSta
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
 
-		querySQL := "SELECT id, strategyId, userId, status, userName, initialAsset, coinAmount, faitAmount, income, extractedIncome, totalIncome, isBuy, createTime, startTime, params FROM robot WHERE userId IN (?) AND marketName = 'btc_qc' ORDER BY status, createTime DESC"
+		querySQL := "SELECT id, strategyId, userId, status, userName, initialAsset, coinAmount, faitAmount, income, extractedIncome, totalIncome, isBuy, createTime, startTime, params FROM robot WHERE userId IN (?) AND marketName = 'btc_qc' ORDER BY status, createTime DESC LIMIT 1"
 		// querySQL := "SELECT id, strategyId, userId, status, userName, initialAsset, coinAmount, faitAmount, income, extractedIncome, totalIncome, isBuy, createTime, startTime FROM robot ORDER BY id DESC LIMIT 10"
 		querySQL, args, err := sqlx.In(querySQL, userIds)
 		if err != nil {
@@ -189,12 +189,16 @@ WHERE userId = ? AND robotId = ? AND status = 1 AND (orderStatus = 1 OR orderSta
 
 		one := decimal.NewFromInt(1)
 		var currentPrice decimal.Decimal
+		buyOne := decimal.Zero
+		sellOne := decimal.Zero
 		depth := Depth()
 		if depth.NotValid() {
 			logger.Warn("获取不到当前最新价格")
 			currentPrice = one
 		} else {
 			currentPrice = depth.CurrentPrice
+			buyOne = depth.BuyOne()
+			sellOne = depth.SellOne()
 		}
 
 		var rtn []map[string]interface{}
@@ -206,40 +210,42 @@ WHERE userId = ? AND robotId = ? AND status = 1 AND (orderStatus = 1 OR orderSta
 				return
 			}
 
-			orderRows, err := db.QueryxContext(ctx, queryOrderList, robot.UserID, robot.ID, robot.UserID, robot.ID)
-			if err != nil {
-				logger.Errorf("查询OrderList失败: %v", err)
-				return
-			}
-
 			var buys []Order
 			var sells []Order
-			for orderRows.Next() {
-				var order Order
-				err := orderRows.StructScan(&order)
+			if robot.Status <= 1 {
+				orderRows, err := db.QueryxContext(ctx, queryOrderList, robot.UserID, robot.ID, robot.UserID, robot.ID)
 				if err != nil {
-					logger.Errorf("反序列化失败Order: %v", err)
+					logger.Errorf("查询OrderList失败: %v", err)
 					return
 				}
 
-				if currentPrice == one {
-					order.Rate = decimal.Decimal{}
-				} else {
-					order.Rate = order.OrderPrice.Div(currentPrice).RoundDown(4).Sub(one).Shift(2)
-				}
-				if order.IsBuy {
-					buys = append(buys, order)
-				} else {
-					sells = append(sells, order)
-				}
-			}
+				for orderRows.Next() {
+					var order Order
+					err := orderRows.StructScan(&order)
+					if err != nil {
+						logger.Errorf("反序列化失败Order: %v", err)
+						return
+					}
 
-			sort.Slice(buys, func(i, j int) bool {
-				return buys[i].OrderPrice.Cmp(buys[j].OrderPrice) > 0
-			})
-			sort.Slice(sells, func(i, j int) bool {
-				return sells[i].OrderPrice.Cmp(sells[j].OrderPrice) < 0
-			})
+					if currentPrice == one {
+						order.Rate = decimal.Decimal{}
+					} else {
+						order.Rate = order.OrderPrice.Div(currentPrice).RoundDown(4).Sub(one).Shift(2)
+					}
+					if order.IsBuy {
+						buys = append(buys, order)
+					} else {
+						sells = append(sells, order)
+					}
+				}
+
+				sort.Slice(buys, func(i, j int) bool {
+					return buys[i].OrderPrice.Cmp(buys[j].OrderPrice) > 0
+				})
+				sort.Slice(sells, func(i, j int) bool {
+					return sells[i].OrderPrice.Cmp(sells[j].OrderPrice) < 0
+				})
+			}
 
 			var params Params
 			index := strings.Index(robot.Params, "\"gridInfo\":{")
@@ -275,6 +281,9 @@ WHERE userId = ? AND robotId = ? AND status = 1 AND (orderStatus = 1 OR orderSta
 			m["btc"] = funds.BTC
 			m["qc"] = funds.QC
 			m["params"] = params
+			m["buyOne"] = buyOne
+			m["sellOne"] = sellOne
+			m["lens"] = len(buys) + len(sells)
 			rtn = append(rtn, m)
 		}
 
