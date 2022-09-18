@@ -140,7 +140,9 @@ func handleClientRequest(client net.Conn) {
 		golog.Errorf("[%s]Read Error: %+v", client.RemoteAddr().String(), err)
 		return
 	}
-	//log.Printf("Bytes: %s\n", b[:])
+	// log.Printf("Bytes: %s\n", b[:])
+	golog.Infof("Request Body: %s", b)
+
 	var method, host, address string
 	indexByte := bytes.IndexByte(b[:], '\n')
 	if indexByte == -1 {
@@ -171,7 +173,7 @@ func handleClientRequest(client net.Conn) {
 
 			index += len(line)
 			if string(line) == "\r\n" {
-				//log.Printf("Body: %s", b[index+1:])
+				// log.Printf("Body: %s", b[index+1:])
 				body.Write(b[index+1:])
 				break
 			}
@@ -188,7 +190,7 @@ func handleClientRequest(client net.Conn) {
 			golog.Error("Http.Do(%s) error: %s", method, err)
 			return
 		}
-		io.Copy(client, resp.Body)
+		_, _ = io.Copy(client, resp.Body)
 		return
 	}
 	golog.Infof("METHOD: %*q, ADDRESS: %q, HOST: %q", 9, method, address, host)
@@ -199,10 +201,10 @@ func handleClientRequest(client net.Conn) {
 			return
 		}
 
-		if hostPortURL.Opaque == "443" { //https访问
+		if hostPortURL.Opaque == "443" { // https访问
 			address = hostPortURL.Scheme + ":443"
-		} else { //http访问
-			if strings.Index(hostPortURL.Host, ":") == -1 { //host不带端口， 默认80
+		} else { // http访问
+			if strings.Index(hostPortURL.Host, ":") == -1 { // host不带端口， 默认80
 				address = hostPortURL.Host + ":80"
 			} else {
 				address = hostPortURL.Host
@@ -212,9 +214,9 @@ func handleClientRequest(client net.Conn) {
 		address = host
 	}
 
-	//log.Printf("Client Conn: %+v, Address: %s", client, address)
+	// log.Printf("Client Conn: %+v, Address: %s", client, address)
 
-	//获得了请求的host和port，就开始拨号吧
+	// 获得了请求的host和port，就开始拨号吧
 	server, err := net.Dial("tcp", address)
 	if err != nil {
 		golog.Error(err)
@@ -225,7 +227,9 @@ func handleClientRequest(client net.Conn) {
 	} else {
 		_, _ = server.Write(b[:n])
 	}
-	//进行转发
+	// 进行转发
 	go io.Copy(server, client)
 	_, _ = io.Copy(client, server)
 }
+
+// eyhbGcioijlUzl1NilsinR5cCl6lkpxVCJg.eyJleHAiOjE2OTQOMDkyNZgslm5iZil6MTY2MZMwNzA3OCwiaWFOljoxNjYzMzA1Mjc4LCIadGkiOiJDTTpjYXRfbWFOY2g6bHQxMiMONTYiLCIvcGVuX2lkljoiliwidwlkljo2Mzc1NTAwLCkZW/1Zyl6lilslmxhbmciOilifQ.MtoGMbmqXijL8WE_iPCqC53chRiz7fGJnBk1xcRIEE
