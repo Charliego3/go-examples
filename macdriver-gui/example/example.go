@@ -98,17 +98,17 @@ func wenAppLaunch(notification objc.Object) {
 
 	rect := core.Rect(0, 0, 600, 665)
 	rootView := cocoa.NSView_Init(rect)
-	//rootView.Set("setTranslatesAutoresizingMaskIntoConstraints:", false)
+	// rootView.Set("setTranslatesAutoresizingMaskIntoConstraints:", false)
 
 	subView := cocoa.NSView_Init(rect)
 
 	rootView.Send("addSubview:", &subView)
 	topConstraint := widgets.NewNSLayoutConstraint()
-	//topConstraint.SetConstraintWithItem(subView, widgets.NSLayoutConstraintAttributeTop, widgets.NSLayoutConstraintRelationEqual, rootView, widgets.NSLayoutConstraintAttributeBottom, 1.0, 40)
+	// topConstraint.SetConstraintWithItem(subView, widgets.NSLayoutConstraintAttributeTop, widgets.NSLayoutConstraintRelationEqual, rootView, widgets.NSLayoutConstraintAttributeBottom, 1.0, 40)
 	rootView.Send("addConstraints:", core.NSArray_WithObjects(topConstraint))
-	//rootView.AddSubviewPositionedRelativeTo(subView, 3, rootView)
+	// rootView.AddSubviewPositionedRelativeTo(subView, 3, rootView)
 
-	nsButton := button.NSButton{NSView: cocoa.NSView{Object: objc.Get("NSButton").Alloc().Init()}}
+	nsButton := button.NSButton{NSView: cocoa.NSView_Init(core.Rect(0, 0, 0, 0))}
 	nsButton.Set("title:", core.String("titled button"))
 	subView.Send("addSubview:", &nsButton)
 
@@ -118,13 +118,13 @@ func wenAppLaunch(notification objc.Object) {
 	btn1.SetType()
 	i := 0
 	btn1.SetAction(func(b button.NSButton) {
-		//rect := core.NSRect{
+		// rect := core.NSRect{
 		//	Origin: core.NSPoint{100, 200},
 		//	Size:   core.NSSize{400, 25},
-		//}
+		// }
 		i++
 		btn1.SetTitle(fmt.Sprintf("Changed Title With Action %d", i))
-		//btn1.Set("frame:", rect)
+		// btn1.Set("frame:", rect)
 	})
 	subView.Send("addSubview:", &btn1)
 
@@ -142,8 +142,8 @@ func wenAppLaunch(notification objc.Object) {
 	disclosure.SetBorderType(button.BezelStyleDisclosure)
 	disclosure.SetType()
 	disclosure.SetAction(func(b button.NSButton) {
-		//state := objc.Get("NSControl.StateValue")
-		//obj.Set("state:", state)
+		// state := objc.Get("NSControl.StateValue")
+		// obj.Set("state:", state)
 	})
 	subView.Send("addSubview:", &disclosure)
 
