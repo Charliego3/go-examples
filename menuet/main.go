@@ -5,8 +5,8 @@ import "github.com/caseymrm/menuet"
 func main() {
 	app := menuet.App()
 	app.SetMenuState(&menuet.MenuState{
-		Title: "Tools",
-		Image: "",
+		// Title: "Tools",
+		Image: "hammer",
 	})
 	app.Label = "com.github.charlie.tools"
 	app.Children = menuItems
