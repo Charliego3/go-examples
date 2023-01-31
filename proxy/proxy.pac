@@ -1,11 +1,10 @@
-function directMatch(url, host) {
+function matched(url, host) {
     return %s;
 }
 
 function FindProxyForURL(url, host) {
-    if (directMatch(url, host)) {
-        return "DIRECT";
+    if (matched(url, host)) {
+        return "PROXY %s:8081; SOCKS %s:8081; DIRECT";
     }
-
-    return "PROXY %s:8081; SOCKS %s:8081; DIRECT";
+    return "DIRECT";
 }

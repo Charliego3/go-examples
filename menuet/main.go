@@ -1,36 +1,33 @@
 package main
 
-import (
-	"log"
-	"time"
-
-	"github.com/caseymrm/menuet"
-)
-
-func helloClock() {
-	for {
-		menuet.App().SetMenuState(&menuet.MenuState{
-			Title: "Hello World " + time.Now().Format(":05"),
-		})
-		time.Sleep(time.Second)
-	}
-}
+import "github.com/caseymrm/menuet"
 
 func main() {
-	//go helloClock()
-	//menuet.App().RunApplication()
+	app := menuet.App()
+	app.SetMenuState(&menuet.MenuState{
+		Title: "Tools",
+		Image: "",
+	})
+	app.Label = "com.github.charlie.tools"
+	app.Children = menuItems
 
-	go func() {
-		alert := menuet.Alert{
-			MessageText:     "This is a Alert",
-			InformativeText: "This is InformativeText",
-			Buttons:         []string{"Btn1", "Btn2"},
-			Inputs:          []string{"Input1", "Input2"},
-		}
-		clicked := menuet.App().Alert(alert)
+	app.RunApplication()
+}
 
-		log.Printf("AlertCliecked: %#v", clicked)
-	}()
+func menuItems() []menuet.MenuItem {
+	var items []menuet.MenuItem
+	items = append(items, proxyItem(items))
+	items = append(items, menuet.MenuItem{Text: "empty"})
+	return items
+}
 
-	menuet.App().RunApplication()
+func notification(title, stitle, msg string) {
+	menuet.App().Notification(menuet.Notification{
+		Title:                        title,
+		Subtitle:                     stitle,
+		Message:                      msg,
+		ActionButton:                 "OK",
+		CloseButton:                  "Close",
+		RemoveFromNotificationCenter: true,
+	})
 }
