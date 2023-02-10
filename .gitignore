@@ -20,3 +20,9 @@
 *.iml
 
 *.wasm
+
+html2csv
+proxy
+serialize-go.data
+serialize-go-map.data
+tools
