@@ -57,9 +57,12 @@ require (
 require (
 	github.com/alibaba/ioc-golang v1.0.0
 	github.com/dubbogo/gost v1.11.25
+	github.com/gin-gonic/gin v1.8.1
+	github.com/gookit/goutil v0.6.2
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/stretchr/objx v0.4.0
 	github.com/xo/dburl v0.9.1
+	gopkg.in/errgo.v2 v2.1.0
 )
 
 require (
@@ -94,7 +97,6 @@ require (
 	github.com/extrame/ole2 v0.0.0-20160812065207-d69429661ad7 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-gonic/gin v1.8.1 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -123,7 +125,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v1.12.1 // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/gookit/color v1.5.0 // indirect
+	github.com/gookit/color v1.5.2 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect

@@ -24,7 +24,7 @@ var (
 	fundsMap  = make(map[string]string)
 )
 
-func init() {
+func initCoins() {
 	var funds []Funds
 	_, err := resty.New().SetTimeout(time.Minute).R().SetResult(&funds).Get("https://api.zb.com/data/v1/coins")
 	if err != nil || len(funds) == 0 {
@@ -37,6 +37,8 @@ func init() {
 }
 
 func TestStatisticsAssets(t *testing.T) {
+	initCoins()
+
 	paths := []string{
 		"/Users/charlie/Downloads/13-pan_qc.log",
 		"/Users/charlie/Downloads/13-pan_usdc (1).log",
