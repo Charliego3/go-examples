@@ -26,8 +26,8 @@ func (p *LoggedProcessor) SetLogger(l *logger.Logger) {
 	p.logger = l
 }
 
-func TestKlineWebsocket(t *testing.T) {
-	const url = "wss://kline.zb.com/websocket"
+func TestKLineWebsocket(t *testing.T) {
+	const url = "wss://kline.bw6.com/websocket"
 	ctx := context.Background()
 	client := websocket.NewClient(ctx, url, &LoggedProcessor{},
 		websocket.WithPing(websocket.NewStringMessage("ping")))
@@ -40,7 +40,7 @@ func TestKlineWebsocket(t *testing.T) {
 }
 
 func TestWSAPI(t *testing.T) {
-	const url = "wss://api.zb.com/websocket"
+	const url = "wss://api.bw6.com/websocket"
 	ctx := context.Background()
 	client := websocket.NewClient(ctx, url, &LoggedProcessor{},
 		websocket.WithPing(websocket.NewStringMessage("ping")))

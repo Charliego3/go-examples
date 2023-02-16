@@ -5,7 +5,7 @@ import "github.com/caseymrm/menuet"
 func main() {
 	app := menuet.App()
 	app.SetMenuState(&menuet.MenuState{
-		// Title: "Tools",
+		//Title: "Tools",
 		Image: "hammer",
 	})
 	app.Label = "com.github.charlie.tools"
@@ -17,7 +17,7 @@ func main() {
 func menuItems() []menuet.MenuItem {
 	var items []menuet.MenuItem
 	items = append(items, proxyItem(items))
-	items = append(items, menuet.MenuItem{Text: "empty"})
+	items = append(items, generatePassword())
 	return items
 }
 

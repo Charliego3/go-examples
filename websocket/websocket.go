@@ -16,12 +16,6 @@ import (
 const (
 	defaultWait       = time.Minute * 3
 	defaultPingPeriod = time.Second * 5
-
-	ContractSubscribe   = "subscribe"
-	ContractUnsubscribe = "unsubscribe"
-
-	SpotSubscribe   = "addChannel"
-	SpotUnsubscribe = "removeChannel"
 )
 
 var closedErr = errors.New("has been closed.")
@@ -107,7 +101,7 @@ func NewClient(ctx context.Context, url string, receiver IWebsocketProcessor, op
 		sender:     make(chan IMessage, 5),
 		msgManager: &msgManager{data: make(map[IMessage]struct{})},
 	}
-	wc.status.Store(WebsocketStatusWaiting)
+	wc.status.Store(StatusWaiting)
 	wc.getOpts(opts...)
 	if wc.logger == nil {
 		prefix := wc.prefix + wc.URL
@@ -137,11 +131,11 @@ func (wc *Client) Shutdown() error {
 	wc.mutex.Lock()
 	defer wc.mutex.Unlock()
 
-	if wc.status.Load() == WebsocketStatusDisconnected {
+	if wc.status.Load() == StatusDisconnected {
 		return nil
 	}
 
-	wc.status.Store(WebsocketStatusDisconnecting)
+	wc.status.Store(StatusDisconnecting)
 	wc.logger.Info("即将关闭 websocket 链接")
 
 	data := wc.msgManager.getData()
@@ -151,21 +145,12 @@ func (wc *Client) Shutdown() error {
 	}
 
 	wc.cg.Wait()
-	wc.status.Store(WebsocketStatusDisconnected)
+	wc.status.Store(StatusDisconnected)
 	close(wc.sender)
 	err := wc.conn.Close()
 	if err != nil {
 		return err
 	}
-
-	//cmutex.Lock()
-	//defer cmutex.Unlock()
-	//uniqueKey := wc.URL
-	//if strutil.IsNotBlank(wc.prefix) {
-	//	uniqueKey = wc.prefix + uniqueKey
-	//}
-	//delete(websockets, uniqueKey)
-
 	wc.logger.Info("websocket 链接已关闭")
 	return nil
 }
@@ -183,14 +168,14 @@ func (wc *Client) connect(reconnect bool) error {
 	defer wc.mutex.Unlock()
 
 	status := wc.status.Load()
-	if status == WebsocketStatusDisconnected {
+	if status == StatusDisconnected {
 		return closedErr
 	} else if reconnect {
-		wc.status.Store(WebsocketStatusReConnecting)
-	} else if status == WebsocketStatusConnected {
+		wc.status.Store(StatusReConnecting)
+	} else if status == StatusConnected {
 		return nil
 	} else {
-		wc.status.Store(WebsocketStatusConnecting)
+		wc.status.Store(StatusConnecting)
 	}
 	dialCtx, cancel := context.WithTimeout(context.Background(), durationDefault(wc.timeout, defaultWait))
 	defer cancel()
@@ -200,7 +185,7 @@ func (wc *Client) connect(reconnect bool) error {
 		return err
 	}
 
-	wc.status.Store(WebsocketStatusConnected)
+	wc.status.Store(StatusConnected)
 
 	wc.conn = conn
 	if !reconnect {
@@ -234,7 +219,7 @@ func (wc *Client) resendMessages() {
 	for msg := range wc.msgManager.getData() {
 		err := wc.SendMessage(msg)
 		if err != nil {
-			if wc.status.Load() == WebsocketStatusDisconnected {
+			if wc.status.Load() == StatusDisconnected {
 				return
 			}
 
@@ -256,9 +241,9 @@ func (wc *Client) accept() {
 		mt, r, err := wc.conn.NextReader()
 		if err != nil {
 			switch wc.status.Load() {
-			case WebsocketStatusDisconnected:
+			case StatusDisconnected:
 				return
-			case WebsocketStatusReConnecting, WebsocketStatusConnecting, WebsocketStatusWaiting:
+			case StatusReConnecting, StatusConnecting, StatusWaiting:
 				time.Sleep(time.Second)
 				continue
 			}
@@ -293,10 +278,10 @@ func (wc *Client) writePump() {
 		select {
 		case <-ticker.C:
 			switch wc.status.Load() {
-			case WebsocketStatusDisconnected:
+			case StatusDisconnected:
 				return
-			case WebsocketStatusReConnecting, WebsocketStatusDisconnecting,
-				WebsocketStatusConnecting, WebsocketStatusWaiting:
+			case StatusReConnecting, StatusDisconnecting,
+				StatusConnecting, StatusWaiting:
 				time.Sleep(period)
 				continue
 			}
@@ -335,7 +320,7 @@ func (wc *Client) writePump() {
 			} else {
 				wc.logger.Infof("发送消息: %s", buf)
 			}
-			if !msg.IsPing() && wc.status.Load() == WebsocketStatusDisconnecting {
+			if !msg.IsPing() && wc.status.Load() == StatusDisconnecting {
 				wc.cg.Done()
 			}
 		case <-wc.ctx.Done():
@@ -349,11 +334,11 @@ func (wc *Client) writePump() {
 
 func (wc *Client) SendMessage(message IMessage) error {
 	switch wc.status.Load() {
-	case WebsocketStatusDisconnected:
+	case StatusDisconnected:
 		return fmt.Errorf("websocket 已断开链接: %+v", message)
-	case WebsocketStatusReConnecting, WebsocketStatusConnecting, WebsocketStatusWaiting:
+	case StatusReConnecting, StatusConnecting, StatusWaiting:
 		return fmt.Errorf("websocket 尚未链接成功: %+v", message)
-	case WebsocketStatusDisconnecting:
+	case StatusDisconnecting:
 		return fmt.Errorf("websocket 链接已关闭: %+v", message)
 	}
 

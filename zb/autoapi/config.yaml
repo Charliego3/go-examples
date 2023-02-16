@@ -1,0 +1,9 @@
+current: BW6
+accounts:
+  - account: BW6
+    accessKey: "21b33970-8a13-4a16-88f7-a94a915739aa"
+    secretKey: "a624cb2c-45ba-491a-bb46-667503c79f34"
+    api: "https://api.bw6.com/"
+    trade: "https://trade.bw6.com/"
+    kline: "wss://kline.bw6.com/websocket"
+    wsapi: "wss://api.bw6.com/websocket"

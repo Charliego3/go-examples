@@ -1,15 +1,15 @@
 package websocket
 
-//go:generate stringer -type=WebsocketStatus -trimprefix=WebsocketStatus -output=status_string.go
-type WebsocketStatus uint8
+//go:generate stringer -type=Status -trimprefix=Status -output=status_string.go
+type Status uint8
 
 const (
-	WebsocketStatusDisconnected WebsocketStatus = iota
-	WebsocketStatusWaiting
-	WebsocketStatusConnecting
-	WebsocketStatusDisconnecting
-	WebsocketStatusEstablish // unused
-	WebsocketStatusInactive  // unused
-	WebsocketStatusConnected
-	WebsocketStatusReConnecting
+	StatusDisconnected Status = iota
+	StatusWaiting
+	StatusConnecting
+	StatusDisconnecting
+	StatusEstablish // unused
+	StatusInactive  // unused
+	StatusConnected
+	StatusReConnecting
 )

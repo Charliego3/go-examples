@@ -51,6 +51,7 @@ func startProxy() bool {
 
 	server = &http.Server{Addr: listenAddress}
 	go server.ListenAndServe()
+	notification("OVpn", "OVpn is started", "you can click proxy to copy address, then setting with system.")
 	return true
 }
 
@@ -171,12 +172,12 @@ func proxyItem(items []menuet.MenuItem) menuet.MenuItem {
 
 			subItems = append(
 				subItems,
-				menuet.MenuItem{Text: "Add address", Clicked: func() {
+				menuet.MenuItem{Text: "Add regex", Clicked: func() {
 					result := menuet.App().Alert(menuet.Alert{
-						MessageText:     "Add a new address",
-						InformativeText: "this address will be proxy",
+						MessageText:     "Add a new regex",
+						InformativeText: "this regex will be proxy",
 						Buttons:         []string{"OK", "Cancel"},
-						Inputs:          []string{"Please input valid address"},
+						Inputs:          []string{"Please input valid regex"},
 					})
 
 					if result.Button == 1 || result.Inputs[0] == "" {
