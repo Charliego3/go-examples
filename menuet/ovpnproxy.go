@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/caseymrm/menuet"
 	"github.com/go-vgo/robotgo/clipboard"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -12,15 +13,15 @@ import (
 )
 
 var (
-	opening      = "off"
-	server       *http.Server
-	autoProxyErr = false
+	opening       = "off"
+	server        *http.Server
+	autoProxyErr  = false
+	listenAddress string
 )
 
 const (
-	listenAddress = "127.0.0.1:60495"
-	destAddress   = "destAddress"
-	proxyAddress  = "proxyAddress"
+	destAddress  = "destAddress"
+	proxyAddress = "proxyAddress"
 )
 
 func init() {
@@ -52,8 +53,10 @@ func startProxy() bool {
 		return true
 	}
 
-	server = &http.Server{Addr: listenAddress}
-	go server.ListenAndServe()
+	listener, _ := net.Listen("tcp", "127.0.0.1:0")
+	listenAddress = listener.Addr().String()
+	server = &http.Server{}
+	go server.Serve(listener)
 	refreshAutoProxy()
 	return true
 }
