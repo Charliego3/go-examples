@@ -6,12 +6,15 @@ import (
 	"github.com/caseymrm/menuet"
 	"github.com/go-vgo/robotgo/clipboard"
 	"net/http"
+	"os"
+	"os/exec"
 	"strings"
 )
 
 var (
-	opening = false
-	server  *http.Server
+	opening      = "off"
+	server       *http.Server
+	autoProxyErr = false
 )
 
 const (
@@ -51,8 +54,34 @@ func startProxy() bool {
 
 	server = &http.Server{Addr: listenAddress}
 	go server.ListenAndServe()
-	notification("OVpn", "OVpn is started", "you can click proxy to copy address, then setting with system.")
+	refreshAutoProxy()
 	return true
+}
+
+func refreshAutoProxy() {
+	setProxy("-setautoproxyurl", "Wi-Fi", "http://"+listenAddress+"/pac")
+	setProxy("-setautoproxystate", "Wi-Fi", "off")
+	setProxy("-setautoproxystate", "Wi-Fi", "on")
+}
+
+func setProxy(args ...string) {
+	if autoProxyErr {
+		return
+	}
+
+	executable, err := exec.LookPath("networksetup")
+	if err != nil {
+		autoProxyErr = true
+		notify("Setting auto proxy error", "", "The automatic proxy setting failed, you need to manually open the setting to open")
+		return
+	}
+	cmd := exec.Command(executable, args...)
+	cmd.Stdout = os.Stdout
+	err = cmd.Run()
+	if err != nil {
+		autoProxyErr = true
+		notify("Setting auto proxy error.", "", "The automatic proxy setting failed, you need to manually open the setting to open")
+	}
 }
 
 func proxyItem(items []menuet.MenuItem) menuet.MenuItem {
@@ -81,7 +110,11 @@ func proxyItem(items []menuet.MenuItem) menuet.MenuItem {
 			_ = server.Shutdown(context.Background())
 			server = nil
 		}
-		opening = !opening
+		if opening == "off" {
+			opening = "on"
+		} else {
+			opening = "off"
+		}
 		if len(items) < 1 {
 			return
 		}
@@ -91,7 +124,7 @@ func proxyItem(items []menuet.MenuItem) menuet.MenuItem {
 	proxy.Text = text + "Stopped"
 	proxy.Clicked = clicked
 
-	if opening {
+	if opening == "on" {
 		if !startProxy() {
 			return proxy
 		}
@@ -100,7 +133,7 @@ func proxyItem(items []menuet.MenuItem) menuet.MenuItem {
 		proxy.Clicked = func() {
 			err := clipboard.WriteAll("http://" + listenAddress + "/pac")
 			if err != nil {
-				notification(
+				notify(
 					"Copy Testing proxy address error",
 					"Subtitle",
 					err.Error(),
@@ -131,6 +164,13 @@ func proxyItem(items []menuet.MenuItem) menuet.MenuItem {
 
 						menuet.Defaults().SetString(destAddress, clicked.Inputs[0])
 					},
+				},
+				{Type: menuet.Separator},
+				{
+					Text:       "Refresh system auto proxy",
+					FontSize:   12,
+					FontWeight: menuet.WeightBold,
+					Clicked:    refreshAutoProxy,
 				},
 				{Type: menuet.Separator},
 			}

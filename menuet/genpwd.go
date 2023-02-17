@@ -54,13 +54,13 @@ func length() menuet.MenuItem {
 
 			length := r.Inputs[0]
 			if length == "" {
-				notification("Set password length error", "you input is empty", "password length can not be empty")
+				notify("Set password length error", "you input is empty", "password length can not be empty")
 				return
 			}
 
 			_, err := strconv.Atoi(length)
 			if err != nil {
-				notification("Set password length error", "you input is not a number", "password length only can input number, you can try again.")
+				notify("Set password length error", "you input is not a number", "password length only can input number, you can try again.")
 				return
 			}
 

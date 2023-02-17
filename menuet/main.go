@@ -1,6 +1,8 @@
 package main
 
-import "github.com/caseymrm/menuet"
+import (
+	"github.com/caseymrm/menuet"
+)
 
 func main() {
 	app := menuet.App()
@@ -21,13 +23,10 @@ func menuItems() []menuet.MenuItem {
 	return items
 }
 
-func notification(title, stitle, msg string) {
-	menuet.App().Notification(menuet.Notification{
-		Title:                        title,
-		Subtitle:                     stitle,
-		Message:                      msg,
-		ActionButton:                 "OK",
-		CloseButton:                  "Close",
-		RemoveFromNotificationCenter: true,
+func notify(title, stitle, msg string) {
+	menuet.App().Alert(menuet.Alert{
+		MessageText:     title,
+		InformativeText: msg,
+		Buttons:         []string{"OK"},
 	})
 }
