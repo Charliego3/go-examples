@@ -63,8 +63,12 @@ func startProxy() bool {
 
 func refreshAutoProxy() {
 	setProxy("-setautoproxyurl", "Wi-Fi", "http://"+listenAddress+"/pac")
-	setProxy("-setautoproxystate", "Wi-Fi", "off")
+	offAutoProxy()
 	setProxy("-setautoproxystate", "Wi-Fi", "on")
+}
+
+func offAutoProxy() {
+	setProxy("-setautoproxystate", "Wi-Fi", "off")
 }
 
 func setProxy(args ...string) {
@@ -117,6 +121,7 @@ func proxyItem(items []menuet.MenuItem) menuet.MenuItem {
 			opening = "on"
 		} else {
 			opening = "off"
+			offAutoProxy()
 		}
 		if len(items) < 1 {
 			return
@@ -174,6 +179,12 @@ func proxyItem(items []menuet.MenuItem) menuet.MenuItem {
 					FontSize:   12,
 					FontWeight: menuet.WeightBold,
 					Clicked:    refreshAutoProxy,
+				},
+				{
+					Text:       "Off system auto proxy",
+					FontSize:   12,
+					FontWeight: menuet.WeightBold,
+					Clicked:    offAutoProxy,
 				},
 				{Type: menuet.Separator},
 			}
