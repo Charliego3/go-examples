@@ -24,3 +24,21 @@ const (
 	TradeTypeIocSell      TradeType = "4"
 	TradeTypeIocBuy       TradeType = "5"
 )
+
+func ReverseTradeType(types int) TradeType {
+	switch types {
+	case 0:
+		return TradeTypeBuy
+	case 1:
+		return TradeTypeSell
+	case 2:
+		return TradeTypePostOnlyBuy
+	case 3:
+		return TradeTypePostOnlySell
+	case 4:
+		return TradeTypeIocBuy
+	case 5:
+		return TradeTypeIocSell
+	}
+	return TradeTypeBuy
+}
