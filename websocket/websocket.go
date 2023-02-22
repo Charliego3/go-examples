@@ -104,7 +104,7 @@ func NewClient(ctx context.Context, url string, receiver IWebsocketProcessor, op
 	wc.status.Store(StatusWaiting)
 	wc.getOpts(opts...)
 	if wc.logger == nil {
-		prefix := wc.prefix + wc.URL
+		prefix := wc.prefix + "*" + wc.URL
 		wc.logger = logger.NewLogger(logger.WithPrefix(prefix))
 	}
 	receiver.SetLogger(wc.logger)
