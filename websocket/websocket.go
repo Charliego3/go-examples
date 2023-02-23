@@ -3,6 +3,7 @@ package websocket
 import (
 	"context"
 	"fmt"
+	"github.com/gookit/goutil/strutil"
 	"github.com/gorilla/websocket"
 	json "github.com/json-iterator/go"
 	"github.com/whimthen/temp/logger"
@@ -104,7 +105,10 @@ func NewClient(ctx context.Context, url string, receiver IWebsocketProcessor, op
 	wc.status.Store(StatusWaiting)
 	wc.getOpts(opts...)
 	if wc.logger == nil {
-		prefix := wc.prefix + "*" + wc.URL
+		if strutil.IsNotBlank(wc.prefix) {
+			wc.prefix += "*"
+		}
+		prefix := wc.prefix + wc.URL
 		wc.logger = logger.NewLogger(logger.WithPrefix(prefix))
 	}
 	receiver.SetLogger(wc.logger)

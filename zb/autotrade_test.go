@@ -2,6 +2,8 @@ package zb
 
 import (
 	"context"
+	"flag"
+	json "github.com/json-iterator/go"
 	"github.com/shopspring/decimal"
 	"github.com/spf13/cast"
 	"github.com/stretchr/objx"
@@ -11,8 +13,11 @@ import (
 	"gopkg.in/yaml.v3"
 	"io"
 	"math/rand"
+	"net/http"
 	"os"
+	"regexp"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -33,12 +38,13 @@ type User struct {
 }
 
 type Config struct {
-	ApiURL   string   `yaml:"apiURL"`
-	TradeRUL string   `yaml:"tradeRUL"`
-	KlineURL string   `yaml:"klineURL"`
-	WsapiURL string   `yaml:"wsapiURL"`
-	Markets  []string `yaml:"markets"`
-	Users    []User   `yaml:"accounts"`
+	ApiURL   string        `yaml:"apiURL"`
+	TradeRUL string        `yaml:"tradeRUL"`
+	KlineURL string        `yaml:"klineURL"`
+	WsapiURL string        `yaml:"wsapiURL"`
+	Interval time.Duration `yaml:"interval"`
+	Markets  []string      `yaml:"markets"`
+	Users    []User        `yaml:"accounts"`
 }
 
 type TradeProcessor struct {
@@ -69,16 +75,20 @@ func (p *TradeProcessor) OnReceive(frame *websocket.Frame) {
 		return
 	}
 
-	channel := obj.Get("channel").String()
-	switch channel {
-	case ChannelIncrRecord:
+	dataType := obj.Get("dataType").String()
+	switch dataType {
+	case "quickDepth":
+		p.logger.Debugf("收到快速行情: %s", content)
+		cprice.Store(decimal.NewFromFloat(obj.Get("currentPrice").Float64()))
+
+	case "userIncrRecord":
 		p.user.ch <- obj
 	default:
-		p.logger.Warnf("收到未处理的消息类型: %s", buf)
+		p.logger.Warnf("收到未处理的消息类型: %s", content)
 	}
 }
 
-func order(ctx context.Context, logger *logger.Logger, user User) {
+func receiveOrder(ctx context.Context, logger *logger.Logger, user User) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -93,8 +103,11 @@ func order(ctx context.Context, logger *logger.Logger, user User) {
 			types := cast.ToInt(record[5])
 
 			if numbers.Equal(completeNumbers) {
-				logger.Infof("本次成交: [%s:%d] = %s", entrustId, types, numbers)
-				market := strings.TrimSuffix(obj.Get("market").String(), "default")
+				logger.Infof("本次成交: [%s:%d] = %s / %s", entrustId, types, unitPrice, numbers)
+				if !*rOrder {
+					return
+				}
+
 				var opUsers []User
 				for _, u := range config.Users {
 					if u.Name == user.Name {
@@ -110,6 +123,7 @@ func order(ctx context.Context, logger *logger.Logger, user User) {
 				}
 
 				opu := opUsers[rand.Intn(len(opUsers))]
+				market := strings.TrimSuffix(obj.Get("market").String(), "default")
 				autoapi.Order(market, numbers, unitPrice, autoapi.ReverseTradeType(types), autoapi.WithAccount(opu.ac))
 				return
 			}
@@ -167,7 +181,13 @@ func (w *Websocket) SubscribeRecord(markets ...string) *Websocket {
 	return w
 }
 
-var config Config
+var (
+	config Config
+	rOrder = flag.Bool("rOrder", false, "成交后是否下 taker 吃单")
+	buyer  atomic.Value
+	seller atomic.Value
+	cprice atomic.Value
+)
 
 func init() {
 	logger.SetFormatter(&logger.Formatter{})
@@ -184,8 +204,50 @@ func init() {
 	rand.Seed(time.Now().UnixMilli())
 }
 
+func listenDepth(ctx context.Context) {
+	group := getGroupMarkets()
+	logger.Debugf("GroupMarkets: %+v", group)
+	zoneRegex := regexp.MustCompile("(" + strings.Join(group["zone"], "|") + ")$")
+
+	clients := make(map[string]*websocket.Client)
+
+	for _, market := range config.Markets {
+		websocketURL := config.WsapiURL
+		if !strings.HasSuffix(websocketURL, "/") {
+			websocketURL += "/"
+		}
+		websocketURL += zoneRegex.ReplaceAllString(market, "")
+
+		var client *websocket.Client
+		if c, ok := clients[websocketURL]; ok {
+			client = c
+		} else {
+			c := websocket.NewClient(
+				ctx, websocketURL, &TradeProcessor{},
+				websocket.WithPing(websocket.NewStringMessage("ping")),
+			)
+			err := c.Connect()
+			if err != nil {
+				panic(err)
+			}
+			client = c
+			clients[websocketURL] = client
+		}
+
+		err := client.SendMessage(&websocket.RequestMsg{
+			Event:   EventAddChannel,
+			Channel: market + "_quick_depth",
+		})
+		if err != nil {
+			logger.Fatalf("订阅深度失败: %+v", err)
+		}
+	}
+}
+
 func TestAutoTrade(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
+	listenDepth(ctx)
+
 	for _, user := range config.Users {
 		user.ch = make(chan objx.Map, 10)
 		user.ac = &autoapi.Account{
@@ -201,11 +263,57 @@ func TestAutoTrade(t *testing.T) {
 		client := NewWebsocket(ctx, user).
 			SubscribeRecord(config.Markets...)
 
-		go order(ctx, client.logger, user)
+		go receiveOrder(ctx, client.logger, user)
+
+		var isBuy bool
+		for _, market := range config.Markets {
+			//go makeOrder(ctx, user, market, isBuy)
+			_ = market
+			isBuy = !isBuy
+		}
 	}
 
 	select {
 	case <-ctx.Done():
 		cancel()
 	}
+}
+
+func makeOrder(ctx context.Context, user User, market string, isBuy bool) {
+	log := logger.NewLogger(logger.WithPrefix("ORDER:%t:%s:%s", isBuy, strings.ToUpper(market), user.Name))
+	ticker := time.NewTicker(config.Interval)
+	for {
+		select {
+		case <-ticker.C:
+			tradeType := autoapi.TradeTypeSell
+			if isBuy {
+				tradeType = autoapi.TradeTypeBuy
+			}
+
+			var numbers, price decimal.Decimal // numbers = minNumber * 2
+			if isBuy {
+
+			}
+
+			autoapi.Order(market, numbers, price, tradeType, autoapi.WithAccount(user.ac))
+		case <-ctx.Done():
+			log.Infof("退出布单流程....")
+			return
+		}
+	}
+}
+
+func getGroupMarkets() map[string][]string {
+	resp, err := http.Get(config.ApiURL + "data/v1/getGroupMarkets")
+	if err != nil {
+		logger.Fatalf("获取 GroupMarkets 失败: %+v", err)
+	}
+
+	group := make(map[string][]string)
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&group)
+	if err != nil {
+		logger.Fatalf("GroupMarkets 反序列化失败: %s", err)
+	}
+	return group
 }

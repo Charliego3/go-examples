@@ -21,6 +21,11 @@ func DepositAddress(currency string) {
 
 // Trade start ==============================
 
+type OrderResp struct {
+	Response `json:",inline"`
+	ID       string `json:"ID,omitempty"`
+}
+
 // Order spot trade
 //
 //	Optional parameters:
@@ -29,10 +34,9 @@ func DepositAddress(currency string) {
 //	WithEnableRepay: default false
 //	WithOrderType: default OrderTypeLimit
 //	WithCustomerOrderId: default ""
-func Order(market string, amount, price decimal.Decimal, tradeType TradeType, opts ...Option[*Values]) {
+func Order(market string, amount, price decimal.Decimal, tradeType TradeType, opts ...Option[*Values]) OrderResp {
 	opts = append(opts, WithCurrencyMarket(market), WithAmount(amount), WithPrice(price), WithTradeType(tradeType), WithTrade())
-	resp := request[any]("api/order", opts...)
-	logger.Infof("Order: %+v", resp)
+	return request[OrderResp]("api/order", opts...)
 }
 
 // Trade ended ==============================

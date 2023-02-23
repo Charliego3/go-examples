@@ -27,3 +27,8 @@ type TickerModel struct {
 	Open     decimal.Decimal `json:"open"`
 	RiseRate decimal.Decimal `json:"riseRate"`
 }
+
+type Response struct {
+	Code    int    `json:"code,omitempty"`
+	Message string `json:"message,omitempty"`
+}
