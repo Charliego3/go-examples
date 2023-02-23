@@ -3,6 +3,7 @@ package zb
 import (
 	"context"
 	"flag"
+	"fmt"
 	json "github.com/json-iterator/go"
 	"github.com/shopspring/decimal"
 	"github.com/spf13/cast"
@@ -60,6 +61,12 @@ type Ticker struct {
 		Open     decimal.Decimal `json:"open"`
 		RiseRate decimal.Decimal `json:"riseRate"`
 	}
+}
+
+type Depth struct {
+	Asks      [][]decimal.Decimal `json:"asks"`
+	Bids      [][]decimal.Decimal `json:"bids"`
+	Timestamp int64               `json:"timestamp"`
 }
 
 type MarketConfig struct {
@@ -205,6 +212,7 @@ func (w *Websocket) SubscribeRecord(markets ...string) *Websocket {
 var (
 	config  Config
 	rOrder  = flag.Bool("rOrder", false, "成交后是否下 taker 吃单")
+	wss     = flag.Bool("wss", false, "是否开启 wss")
 	buyer   atomic.Value
 	seller  atomic.Value
 	cprice  atomic.Value
@@ -269,7 +277,9 @@ func listenQuickDepth(ctx context.Context) {
 
 func TestAutoTrade(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	//listenQuickDepth(ctx)
+	if *wss {
+		listenQuickDepth(ctx)
+	}
 
 	for _, user := range config.Users {
 		user.ch = make(chan objx.Map, 10)
@@ -283,10 +293,12 @@ func TestAutoTrade(t *testing.T) {
 			WSAPI:     config.WsapiURL,
 		}
 
-		client := NewWebsocket(ctx, user).
-			SubscribeRecord(config.Markets...)
+		if *wss {
+			client := NewWebsocket(ctx, user).
+				SubscribeRecord(config.Markets...)
 
-		go receiveOrder(ctx, client.logger, user)
+			go receiveOrder(ctx, client.logger, user)
+		}
 
 		for _, market := range config.Markets {
 			go makeOrder(ctx, user, market)
@@ -315,17 +327,21 @@ func makeOrder(ctx context.Context, user User, market string) {
 			types := rand.Intn(2)
 			tradeType := autoapi.TradeTypeByInt(types)
 			var numbers, price decimal.Decimal // numbers = minNumber * 2
-			sub := ticker.Ticker.High.Sub(ticker.Ticker.Low)
+			sub := ticker.Ticker.Sell.Sub(ticker.Ticker.Buy)
 			exponent := sub.Exponent()
 			randN := rand.Int63n(sub.CoefficientInt64())
-			price = ticker.Ticker.Low.Add(decimal.NewFromInt(randN).Shift(exponent))
+			price = randomPrice(market)
+			if price.IsZero() {
+				price = ticker.Ticker.Buy.Add(decimal.NewFromInt(randN).Shift(exponent))
+			}
+
 			if types&1 == 1 { // buy
 				upper := ticker.Ticker.Last.Mul(decimal.NewFromFloat(1.5))
 				if price.GreaterThan(upper) {
 					price = upper
 				}
 			} else {
-				lower := ticker.Ticker.Last.Div(decimal.NewFromFloat(0.5))
+				lower := ticker.Ticker.Last.Mul(decimal.NewFromFloat(0.5))
 				if price.LessThan(lower) {
 					price = lower
 				}
@@ -355,6 +371,29 @@ func makeOrder(ctx context.Context, user User, market string) {
 			return
 		}
 	}
+}
+
+func randomPrice(market string) decimal.Decimal {
+	resp, err := http.Get(config.ApiURL + fmt.Sprintf("data/v1/depth?market=%s&size=3", market))
+	if err != nil {
+		return decimal.Zero
+	}
+
+	var depth Depth
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&depth)
+	if err != nil {
+		return decimal.Zero
+	}
+
+	var prices []decimal.Decimal
+	for _, ask := range depth.Asks {
+		prices = append(prices, ask[0])
+	}
+	for _, bind := range depth.Bids {
+		prices = append(prices, bind[0])
+	}
+	return prices[rand.Intn(len(prices))]
 }
 
 func initMarketConfig() {
