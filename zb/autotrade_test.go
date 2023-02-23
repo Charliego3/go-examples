@@ -47,6 +47,28 @@ type Config struct {
 	Users    []User        `yaml:"accounts"`
 }
 
+type Ticker struct {
+	Date   string `json:"date"`
+	Ticker struct {
+		High     decimal.Decimal `json:"high"`
+		Vol      decimal.Decimal `json:"vol"`
+		Last     decimal.Decimal `json:"last"`
+		Low      decimal.Decimal `json:"low"`
+		Buy      decimal.Decimal `json:"buy"`
+		Sell     decimal.Decimal `json:"sell"`
+		Turnover decimal.Decimal `json:"turnover"`
+		Open     decimal.Decimal `json:"open"`
+		RiseRate decimal.Decimal `json:"riseRate"`
+	}
+}
+
+type MarketConfig struct {
+	AmountScale decimal.Decimal `json:"amountScale"`
+	MinAmount   decimal.Decimal `json:"minAmount"`
+	MinSize     decimal.Decimal `json:"minSize"`
+	PriceScale  decimal.Decimal `json:"priceScale"`
+}
+
 type TradeProcessor struct {
 	logger *logger.Logger
 	user   User
@@ -95,7 +117,6 @@ func receiveOrder(ctx context.Context, logger *logger.Logger, user User) {
 			logger.Infof("服务已停止")
 		case obj := <-user.ch:
 			record := obj.Get("record").InterSlice()
-			logger.Infof("Json: %+v", record)
 			entrustId := record[0].(string)
 			unitPrice := decimal.NewFromFloat(record[1].(float64))
 			numbers := decimal.NewFromFloat(record[2].(float64))
@@ -182,11 +203,12 @@ func (w *Websocket) SubscribeRecord(markets ...string) *Websocket {
 }
 
 var (
-	config Config
-	rOrder = flag.Bool("rOrder", false, "成交后是否下 taker 吃单")
-	buyer  atomic.Value
-	seller atomic.Value
-	cprice atomic.Value
+	config  Config
+	rOrder  = flag.Bool("rOrder", false, "成交后是否下 taker 吃单")
+	buyer   atomic.Value
+	seller  atomic.Value
+	cprice  atomic.Value
+	markets map[string]MarketConfig
 )
 
 func init() {
@@ -202,9 +224,10 @@ func init() {
 	}
 
 	rand.Seed(time.Now().UnixMilli())
+	initMarketConfig()
 }
 
-func listenDepth(ctx context.Context) {
+func listenQuickDepth(ctx context.Context) {
 	group := getGroupMarkets()
 	logger.Debugf("GroupMarkets: %+v", group)
 	zoneRegex := regexp.MustCompile("(" + strings.Join(group["zone"], "|") + ")$")
@@ -246,7 +269,7 @@ func listenDepth(ctx context.Context) {
 
 func TestAutoTrade(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	listenDepth(ctx)
+	//listenQuickDepth(ctx)
 
 	for _, user := range config.Users {
 		user.ch = make(chan objx.Map, 10)
@@ -265,11 +288,8 @@ func TestAutoTrade(t *testing.T) {
 
 		go receiveOrder(ctx, client.logger, user)
 
-		var isBuy bool
 		for _, market := range config.Markets {
-			//go makeOrder(ctx, user, market, isBuy)
-			_ = market
-			isBuy = !isBuy
+			go makeOrder(ctx, user, market)
 		}
 	}
 
@@ -279,28 +299,93 @@ func TestAutoTrade(t *testing.T) {
 	}
 }
 
-func makeOrder(ctx context.Context, user User, market string, isBuy bool) {
-	log := logger.NewLogger(logger.WithPrefix("ORDER:%t:%s:%s", isBuy, strings.ToUpper(market), user.Name))
+func makeOrder(ctx context.Context, user User, market string) {
+	log := logger.NewLogger(logger.WithPrefix("ORDER:%s:%s", strings.ToUpper(market), user.Name))
 	ticker := time.NewTicker(config.Interval)
 	for {
 		select {
 		case <-ticker.C:
-			tradeType := autoapi.TradeTypeSell
-			if isBuy {
-				tradeType = autoapi.TradeTypeBuy
+			ticker, err := getTicker(market)
+			if err != nil {
+				log.Errorf("获取 Ticker 失败, 休眠1min: %s = %s", market, err)
+				time.Sleep(time.Minute)
+				continue
 			}
 
+			types := rand.Intn(2)
+			tradeType := autoapi.TradeTypeByInt(types)
 			var numbers, price decimal.Decimal // numbers = minNumber * 2
-			if isBuy {
-
+			sub := ticker.Ticker.High.Sub(ticker.Ticker.Low)
+			exponent := sub.Exponent()
+			randN := rand.Int63n(sub.CoefficientInt64())
+			price = ticker.Ticker.Low.Add(decimal.NewFromInt(randN).Shift(exponent))
+			if types&1 == 1 { // buy
+				upper := ticker.Ticker.Last.Mul(decimal.NewFromFloat(1.5))
+				if price.GreaterThan(upper) {
+					price = upper
+				}
+			} else {
+				lower := ticker.Ticker.Last.Div(decimal.NewFromFloat(0.5))
+				if price.LessThan(lower) {
+					price = lower
+				}
 			}
 
-			autoapi.Order(market, numbers, price, tradeType, autoapi.WithAccount(user.ac))
+			if conf, ok := markets[market]; ok {
+				total := conf.MinAmount.Mul(price)
+				if total.LessThan(conf.MinAmount) {
+					numbers = conf.MinSize.Div(price).Ceil()
+				} else {
+					numbers = conf.MinAmount
+				}
+			} else {
+				numbers = decimal.NewFromInt(1)
+			}
+
+			resp := autoapi.Order(market, numbers, price, tradeType, autoapi.WithAccount(user.ac))
+			if resp.Code == 1000 {
+				log.Infof("下单成功: Numbers: %s, Price: %s, TradeType: %s",
+					numbers, price, tradeType.String())
+			} else {
+				log.Errorf("下单失败: Numbers: %s, Price: %s, TradeType: %s, Reason: %s",
+					numbers, price, tradeType.String(), resp.Message)
+			}
 		case <-ctx.Done():
 			log.Infof("退出布单流程....")
 			return
 		}
 	}
+}
+
+func initMarketConfig() {
+	resp, err := http.Get(config.ApiURL + "data/v1/markets")
+	if err != nil {
+		panic(err)
+	}
+
+	configs := make(map[string]MarketConfig)
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&configs)
+	if err != nil {
+		panic(err)
+	}
+
+	markets = make(map[string]MarketConfig)
+	for k, v := range configs {
+		markets[strings.ReplaceAll(k, "_", "")] = v
+	}
+}
+
+func getTicker(market string) (Ticker, error) {
+	resp, err := http.Get(config.ApiURL + "data/v1/ticker?market=" + market)
+	if err != nil {
+		return Ticker{}, err
+	}
+
+	var ticker Ticker
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&ticker)
+	return ticker, err
 }
 
 func getGroupMarkets() map[string][]string {
@@ -316,4 +401,18 @@ func getGroupMarkets() map[string][]string {
 		logger.Fatalf("GroupMarkets 反序列化失败: %s", err)
 	}
 	return group
+}
+
+func TestDecimal(t *testing.T) {
+	market := "trxusdt"
+	ticker, err := getTicker(market)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sub := ticker.Ticker.Sell.Sub(ticker.Ticker.Buy)
+	exponent := sub.Exponent()
+	randN := rand.Int63n(sub.CoefficientInt64())
+	price := ticker.Ticker.Buy.Add(decimal.NewFromInt(randN).Shift(exponent))
+	t.Logf("tb: %s, ts: %s, price: %s", ticker.Ticker.Buy, ticker.Ticker.Sell, price)
 }

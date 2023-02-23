@@ -2,7 +2,7 @@ apiURL: "https://api.bw6.com/"
 tradeRUL: "https://trade.bw6.com/"
 klineURL: "wss://kline.bw6.com/websocket"
 wsapiURL: "wss://api.bw6.com/websocket"
-interval: 3s # 下单时间间隔
+interval: 1s # 下单时间间隔
 
 markets:
   - trxusdt

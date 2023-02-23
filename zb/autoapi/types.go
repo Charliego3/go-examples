@@ -25,6 +25,42 @@ const (
 	TradeTypeIocBuy       TradeType = "5"
 )
 
+func (tt TradeType) String() string {
+	switch tt {
+	case TradeTypeSell:
+		return "限价卖出"
+	case TradeTypeBuy:
+		return "限价买入"
+	case TradeTypePostOnlySell:
+		return "PostOnly 卖出"
+	case TradeTypePostOnlyBuy:
+		return "PostOnly 买入"
+	case TradeTypeIocSell:
+		return "IOC 卖出"
+	case TradeTypeIocBuy:
+		return "IOC 买入"
+	}
+	return "--"
+}
+
+func TradeTypeByInt(types int) TradeType {
+	switch types {
+	case 0:
+		return TradeTypeSell
+	case 1:
+		return TradeTypeBuy
+	case 2:
+		return TradeTypePostOnlySell
+	case 3:
+		return TradeTypePostOnlyBuy
+	case 4:
+		return TradeTypeIocSell
+	case 5:
+		return TradeTypeIocBuy
+	}
+	return TradeTypeBuy
+}
+
 func ReverseTradeType(types int) TradeType {
 	switch types {
 	case 0:
