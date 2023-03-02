@@ -1,5 +1,6 @@
 apiURL: "https://api.bw6.com/"
 tradeRUL: "https://trade.bw6.com/"
+#tradeRUL: "http://127.0.0.1:8080/"
 klineURL: "wss://kline.bw6.com/websocket"
 wsapiURL: "wss://api.bw6.com/websocket"
 interval: 1s # 下单时间间隔

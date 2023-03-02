@@ -8,13 +8,15 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
 
 var (
 	DefaultAccount *Account
-	client         = resty.New().SetTimeout(time.Minute).SetLogger(logger.StandardLogger()).SetProxy("http://172.16.100.150:23128")
+	client         = resty.New().SetTimeout(time.Minute).SetLogger(logger.StandardLogger())
+	//.SetProxy("http://172.16.100.150:23128")
 )
 
 type Config struct {
@@ -42,14 +44,34 @@ func request[T any](endpoint string, opts ...Option[*Values]) T {
 		p.URL += "/"
 	}
 	t := new(T)
-	request := p.URL + endpoint + "?" + p.Encode()
+
+	var params strings.Builder
+	keys := make([]string, 0, len(p.Values))
+	for k := range p.Values {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		vs := p.Values[k]
+		for _, v := range vs {
+			if params.Len() > 0 {
+				params.WriteByte('&')
+			}
+			params.WriteString(k)
+			params.WriteByte('=')
+			params.WriteString(v)
+		}
+	}
+
+	request := p.URL + endpoint + "?" + params.String()
+	logger.Debugf("Request: %s", request)
 	resp, err := client.R().SetResult(t).Get(request)
 	var cancel bool
 	if err != nil {
 		logger.Errorf("Request: %s\n\terror: %+v", request, err)
 		cancel = true
 	} else if resp.StatusCode() != 200 {
-		logger.Infof("Request: %s\n\t Status: %s", request, resp.Status())
+		logger.Infof("Request: %s\n\t Status: %s, Body: %s", request, resp.Status(), resp.Body())
 		cancel = true
 	} else if !strings.HasPrefix(resp.Header().Get("Content-Type"), "application/json") {
 		logger.Errorf("响应非JSON格式, Request: %s, Response: %s", request, resp.Body())

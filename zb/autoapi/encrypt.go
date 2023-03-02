@@ -5,10 +5,34 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"encoding/hex"
+	"sort"
+	"strings"
 )
 
-func digestSign(p *Values) {
+func encodeDigestSign(p *Values) {
 	sign := HmacMD5(p.Encode(), p.SecretKey)
+	p.Set("sign", sign)
+}
+
+func digestSign(p *Values) {
+	var params strings.Builder
+	keys := make([]string, 0, len(p.Values))
+	for k := range p.Values {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		vs := p.Values[k]
+		for _, v := range vs {
+			if params.Len() > 0 {
+				params.WriteByte('&')
+			}
+			params.WriteString(k)
+			params.WriteByte('=')
+			params.WriteString(v)
+		}
+	}
+	sign := HmacMD5(params.String(), p.SecretKey)
 	p.Set("sign", sign)
 }
 

@@ -20,7 +20,7 @@ func TestApis(t *testing.T) {
 func TestFunds(t *testing.T) {
 	UserInfo()
 	DepositAddress("usdt")
-	Order("trx_usdt", decimal.NewFromInt(20), decimal.NewFromFloat32(0.062), TradeTypeBuy)
+	Order("trx_usdt", decimal.NewFromFloat32(0.062), decimal.NewFromInt(20), TradeTypeBuy)
 }
 
 func TestName(t *testing.T) {

@@ -34,9 +34,15 @@ type OrderResp struct {
 //	WithEnableRepay: default false
 //	WithOrderType: default OrderTypeLimit
 //	WithCustomerOrderId: default ""
-func Order(market string, amount, price decimal.Decimal, tradeType TradeType, opts ...Option[*Values]) OrderResp {
+func Order(market string, price, amount decimal.Decimal, tradeType TradeType, opts ...Option[*Values]) OrderResp {
 	opts = append(opts, WithCurrencyMarket(market), WithAmount(amount), WithPrice(price), WithTradeType(tradeType), WithTrade())
 	return request[OrderResp]("api/order", opts...)
+}
+
+func BatchOrder(market string, tradeType TradeType, tradeParams [][]decimal.Decimal, opts ...Option[*Values]) {
+	opts = append(opts, WithMarket(market), WithTradeType(tradeType), WithObj("tradeParams", tradeParams), WithTrade())
+	resp := request[any]("api/orderMoreV2", opts...)
+	logger.Infof("OrderMoreV2 response: %+v", resp)
 }
 
 // Trade ended ==============================

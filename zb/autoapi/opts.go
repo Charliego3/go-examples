@@ -1,8 +1,11 @@
 package autoapi
 
 import (
-	"github.com/shopspring/decimal"
+	"encoding/json"
 	"net/url"
+
+	"github.com/shopspring/decimal"
+	"github.com/whimthen/temp/logger"
 )
 
 type Option[T any] func(T)
@@ -13,6 +16,17 @@ type Values struct {
 	URL         string
 	usingTrade  bool
 	continueErr bool
+}
+
+func WithObj(key string, obj any) Option[*Values] {
+    return func(t *Values)  {
+        buf, err := json.Marshal(obj)
+        if err != nil {
+            logger.Errorf("Settings the obj[%s] value error: %s", key, err)
+            return
+        }
+        t.Set(key, string(buf))
+    }
 }
 
 func WithMarket(market string) Option[*Values] {

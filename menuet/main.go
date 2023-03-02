@@ -20,13 +20,18 @@ func menuItems() []menuet.MenuItem {
 	var items []menuet.MenuItem
 	items = append(items, proxyItem(items))
 	items = append(items, generatePassword())
+    items = append(items, openProject())
 	return items
 }
 
-func notify(title, stitle, msg string) {
+func notify(title, msg string) {
 	menuet.App().Alert(menuet.Alert{
 		MessageText:     title,
 		InformativeText: msg,
 		Buttons:         []string{"OK"},
 	})
+}
+
+func warning(msg string) {
+    notify("Oops!", msg)
 }

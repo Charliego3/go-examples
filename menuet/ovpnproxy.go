@@ -79,7 +79,7 @@ func setProxy(args ...string) {
 	executable, err := exec.LookPath("networksetup")
 	if err != nil {
 		autoProxyErr = true
-		notify("Setting auto proxy error", "", "The automatic proxy setting failed, you need to manually open the setting to open")
+		notify("Setting auto proxy error", "The automatic proxy setting failed, you need to manually open the setting to open")
 		return
 	}
 	cmd := exec.Command(executable, args...)
@@ -87,7 +87,7 @@ func setProxy(args ...string) {
 	err = cmd.Run()
 	if err != nil {
 		autoProxyErr = true
-		notify("Setting auto proxy error.", "", "The automatic proxy setting failed, you need to manually open the setting to open")
+		notify("Setting auto proxy error.", "The automatic proxy setting failed, you need to manually open the setting to open")
 	}
 }
 
@@ -143,7 +143,6 @@ func proxyItem(items []menuet.MenuItem) menuet.MenuItem {
 			if err != nil {
 				notify(
 					"Copy Testing proxy address error",
-					"Subtitle",
 					err.Error(),
 				)
 			}

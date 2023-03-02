@@ -152,7 +152,7 @@ func receiveOrder(ctx context.Context, logger *logger.Logger, user User) {
 
 				opu := opUsers[rand.Intn(len(opUsers))]
 				market := strings.TrimSuffix(obj.Get("market").String(), "default")
-				autoapi.Order(market, numbers, unitPrice, autoapi.ReverseTradeType(types), autoapi.WithAccount(opu.ac))
+				autoapi.Order(market, unitPrice, numbers, autoapi.ReverseTradeType(types), autoapi.WithAccount(opu.ac))
 				return
 			}
 
@@ -358,7 +358,7 @@ func makeOrder(ctx context.Context, user User, market string) {
 				numbers = decimal.NewFromInt(1)
 			}
 
-			resp := autoapi.Order(market, numbers, price, tradeType, autoapi.WithAccount(user.ac))
+			resp := autoapi.Order(market, price, numbers, tradeType, autoapi.WithAccount(user.ac))
 			if resp.Code == 1000 {
 				log.Infof("下单成功: Numbers: %s, Price: %s, TradeType: %s",
 					numbers, price, tradeType.String())
@@ -454,4 +454,36 @@ func TestDecimal(t *testing.T) {
 	randN := rand.Int63n(sub.CoefficientInt64())
 	price := ticker.Ticker.Buy.Add(decimal.NewFromInt(randN).Shift(exponent))
 	t.Logf("tb: %s, ts: %s, price: %s", ticker.Ticker.Buy, ticker.Ticker.Sell, price)
+}
+
+func TestOrder(t *testing.T) {
+	resp := autoapi.Order(
+		"ethusdt",
+		decimal.NewFromFloat(1600),
+		decimal.NewFromFloat(0.01),
+		autoapi.TradeTypeBuy,
+		autoapi.WithAccount(getFirstAccount()),
+	)
+
+	t.Logf("Order Response: %+v", resp)
+}
+
+func getFirstAccount() *autoapi.Account {
+	return &autoapi.Account{
+		Account:   config.Users[0].Name,
+		AccessKey: config.Users[0].AccessKey,
+		SecretKey: config.Users[0].SecretKey,
+		API:       config.ApiURL,
+		Trade:     config.TradeRUL,
+		KLine:     config.KlineURL,
+		WSAPI:     config.WsapiURL,
+	}
+}
+
+func TestOrderMoreV2(t *testing.T) {
+	account := getFirstAccount()
+	autoapi.BatchOrder("ethusdt", autoapi.TradeTypeBuy, [][]decimal.Decimal{
+		{decimal.NewFromFloat(1630), decimal.NewFromFloat(0.01)},
+		{decimal.NewFromFloat(1620), decimal.NewFromFloat(0.01)},
+	}, autoapi.WithAccount(account))
 }
