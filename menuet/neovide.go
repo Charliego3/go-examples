@@ -2,19 +2,17 @@ package main
 
 import (
 	"os"
-    "os/exec"
+	"os/exec"
 	"path/filepath"
+	// "strings"
 
 	"github.com/caseymrm/menuet"
 	"github.com/sqweek/dialog"
 )
 
 func open(project string) {
-    warning(project)
     os.Chdir(project)
-    cmd := exec.Command("neovide")
-    cmd.Dir = project
-    _ = cmd.Start()
+    exec.Command("/usr/local/bin/neovide").Start()
 }
 
 const projectKey = "projectKey"
@@ -25,6 +23,7 @@ func openProject() menuet.MenuItem {
 
     var items []menuet.MenuItem
     for _, p := range projects {
+        p := p
         items = append(items, menuet.MenuItem{
             Text: filepath.Base(p),
             Clicked: func() { open(p) },
