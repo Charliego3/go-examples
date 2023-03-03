@@ -45,4 +45,9 @@ func BatchOrder(market string, tradeType TradeType, tradeParams [][]decimal.Deci
 	logger.Infof("OrderMoreV2 response: %+v", resp)
 }
 
+func CancelAllOrders(market string, opts ...Option[*Values]) any {
+    opts = append(opts, WithCurrencyMarket(market), WithTrade())
+    return request[any]("api/cancelAllOpenedOrders", opts...)
+}
+
 // Trade ended ==============================

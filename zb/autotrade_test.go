@@ -462,17 +462,26 @@ func TestOrder(t *testing.T) {
 		decimal.NewFromFloat(1600),
 		decimal.NewFromFloat(0.01),
 		autoapi.TradeTypeBuy,
-		autoapi.WithAccount(getFirstAccount()),
+		autoapi.WithAccount(getAccount(0)),
 	)
 
 	t.Logf("Order Response: %+v", resp)
 }
 
-func getFirstAccount() *autoapi.Account {
+func TestCancelAllOrders(t *testing.T) {
+    for idx := range config.Users {
+        account := getAccount(idx)
+        ethusdt := autoapi.CancelAllOrders("ethusdt", autoapi.WithAccount(account))
+        btcusdt := autoapi.CancelAllOrders("btcusdt", autoapi.WithAccount(account))
+        logger.Infof("ETHUSDT: %+v, BTCUSDT: %+v", ethusdt, btcusdt)
+    }
+}
+
+func getAccount(idx int) *autoapi.Account {
 	return &autoapi.Account{
-		Account:   config.Users[0].Name,
-		AccessKey: config.Users[0].AccessKey,
-		SecretKey: config.Users[0].SecretKey,
+		Account:   config.Users[idx].Name,
+		AccessKey: config.Users[idx].AccessKey,
+		SecretKey: config.Users[idx].SecretKey,
 		API:       config.ApiURL,
 		Trade:     config.TradeRUL,
 		KLine:     config.KlineURL,
@@ -481,7 +490,7 @@ func getFirstAccount() *autoapi.Account {
 }
 
 func TestOrderMoreV2(t *testing.T) {
-	account := getFirstAccount()
+	account := getAccount(0)
 	autoapi.BatchOrder("ethusdt", autoapi.TradeTypeBuy, [][]decimal.Decimal{
 		{decimal.NewFromFloat(1630), decimal.NewFromFloat(0.01)},
 		{decimal.NewFromFloat(1620), decimal.NewFromFloat(0.01)},
