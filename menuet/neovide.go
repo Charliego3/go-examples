@@ -12,7 +12,7 @@ import (
 
 func open(project string) {
     os.Chdir(project)
-    exec.Command("/usr/local/bin/neovide").Start()
+    exec.Command("/usr/local/bin/neovide", "--multigrid").Start()
 }
 
 const projectKey = "projectKey"
