@@ -76,6 +76,7 @@ func getUserFund(key string) (string, string) {
 	if !ok {
 		fund = uf[1]
 	}
+
 	return uf[0], fund
 }
 
