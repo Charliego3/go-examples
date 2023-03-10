@@ -7,7 +7,7 @@ import (
 func main() {
 	app := menuet.App()
 	app.SetMenuState(&menuet.MenuState{
-		//Title: "Tools",
+		// Title: "Tools",
 		Image: "hammer",
 	})
 	app.Label = "com.github.charlie.tools"
@@ -20,7 +20,7 @@ func menuItems() []menuet.MenuItem {
 	var items []menuet.MenuItem
 	items = append(items, proxyItem(items))
 	items = append(items, generatePassword())
-    items = append(items, openProject())
+	items = append(items, openProject())
 	return items
 }
 
@@ -33,5 +33,5 @@ func notify(title, msg string) {
 }
 
 func warning(msg string) {
-    notify("Oops!", msg)
+	notify("Oops!", msg)
 }

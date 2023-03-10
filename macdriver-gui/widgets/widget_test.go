@@ -1,6 +1,8 @@
 package widgets
 
 import (
+	"testing"
+
 	"github.com/kataras/golog"
 	"github.com/progrium/macdriver/cocoa"
 	"github.com/progrium/macdriver/core"
@@ -9,7 +11,6 @@ import (
 	"github.com/whimthen/temp/macdriver-gui/widgets/statusBar"
 	"github.com/whimthen/temp/macdriver-gui/widgets/table"
 	"github.com/whimthen/temp/macdriver-gui/widgets/type_alias"
-	"testing"
 )
 
 func TestConstraint(t *testing.T) {
@@ -37,7 +38,7 @@ func TestConstraint(t *testing.T) {
 }
 
 func TestViews(t *testing.T) {
-	app := statusBar.NewStatusBarApp("🛠", cocoa.NSSquareStatusItemLength)
+	app := statusBar.NewStatusBarApp("🛠", func(item cocoa.NSStatusItem) {})
 	app.AddSubMenu("Window Example",
 		statusBar.SubMenu{
 			SubTitle: "Layout Constraint",
@@ -127,7 +128,7 @@ func layoutConstraint(object objc.Object) {
 
 	rootView := cocoa.NSView_Init(win.Frame())
 
-	subView := cocoa.NSView{Object: objc.Get("NSView").Alloc().Init()}
+	subView := cocoa.NSView{}
 	subView.SetBackgroundColor(cocoa.Color(255, 255, 0, 1))
 	subView.SetWantsLayer(true)
 	subView.Layer().SetCornerRadius(10)

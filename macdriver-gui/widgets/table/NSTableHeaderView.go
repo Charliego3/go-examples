@@ -14,5 +14,5 @@ var nsTableHeaderView = objc.Get("NSTableHeaderViews")
 func NewNSTableHeaderView(table NSTableView) NSTableHeaderView {
 	header := nsTableHeaderView.Alloc().Init()
 	header.Set("tableView:", &table)
-	return NSTableHeaderView{cocoa.NSView{Object: header}}
+	return NSTableHeaderView{cocoa.NSView{}}
 }

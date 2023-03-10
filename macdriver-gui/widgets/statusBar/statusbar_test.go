@@ -1,15 +1,16 @@
 package statusBar
 
 import (
+	"testing"
+
 	"github.com/progrium/macdriver/cocoa"
 	"github.com/progrium/macdriver/core"
 	"github.com/progrium/macdriver/objc"
 	"github.com/whimthen/temp/macdriver-gui/widgets/alert"
-	"testing"
 )
 
 func TestNewStatusBarApp(t *testing.T) {
-	app := NewStatusBarApp("测试", cocoa.NSVariableStatusItemLength)
+	app := NewStatusBarApp("测试", func(item cocoa.NSStatusItem) {})
 	app.AddMenuItem("item1", func(_ objc.Object) {
 		nsAlert := alert.NewNSAlert()
 		nsAlert.SetAlertStyle(alert.Informational)

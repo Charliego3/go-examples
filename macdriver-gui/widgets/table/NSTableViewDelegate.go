@@ -2,6 +2,7 @@ package table
 
 import (
 	"fmt"
+
 	"github.com/progrium/macdriver/cocoa"
 	"github.com/progrium/macdriver/core"
 	"github.com/progrium/macdriver/objc"
@@ -23,7 +24,7 @@ func NewNSTableViewDelegate() NSTableViewDelegate {
 func lazyLoadDefaultDelegate() {
 	class := objc.NewClass("DefaultNSTableViewDelegate", "NSObject")
 	class.AddMethod("tableView:viewForTableColumn:row:", func(dataSource, table, column objc.Object, row int) objc.Object {
-		text := cocoa.NSView{objc.Get("NSText").Alloc().Send("initWithFrame:", core.Rect(0, 0, 100, 16))}
+		text := cocoa.NSView{}
 		identifier := column.Get("identifier").String()
 		if identifier == "Column1" {
 			//return NewNSCell(fmt.Sprintf("Delegate: Row-%d, Column1", row))

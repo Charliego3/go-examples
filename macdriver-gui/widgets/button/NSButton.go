@@ -15,7 +15,7 @@ type NSButton struct {
 }
 
 func NewButtonWithFrame(frame core.NSRect) NSButton {
-	return NSButton{NSView: cocoa.NSView{Object: nsButton.Alloc().Send("initWithFrame:", frame)}}
+	return NSButton{NSView: cocoa.NSView{}}
 }
 
 func (b NSButton) SetTitle(title string) {

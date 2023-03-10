@@ -3,18 +3,22 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/caseymrm/menuet"
-	"github.com/go-vgo/robotgo/clipboard"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/caseymrm/menuet"
+	"github.com/go-vgo/robotgo/clipboard"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var (
 	opening       = "off"
 	server        *http.Server
+	serveing      bool
 	autoProxyErr  = false
 	listenAddress string
 )
@@ -62,13 +66,23 @@ func startProxy() bool {
 }
 
 func refreshAutoProxy() {
-	setProxy("-setautoproxyurl", "Wi-Fi", "http://"+listenAddress+"/pac")
+	setProxyURL()
 	offAutoProxy()
+	openProxy()
+}
+
+func openProxy() {
 	setProxy("-setautoproxystate", "Wi-Fi", "on")
+	opening = "on"
+}
+
+func setProxyURL() {
+	setProxy("-setautoproxyurl", "Wi-Fi", "http://"+listenAddress+"/pac")
 }
 
 func offAutoProxy() {
 	setProxy("-setautoproxystate", "Wi-Fi", "off")
+	opening = "off"
 }
 
 func setProxy(args ...string) {
@@ -92,7 +106,7 @@ func setProxy(args ...string) {
 }
 
 func proxyItem(items []menuet.MenuItem) menuet.MenuItem {
-	text := "Testing proxy - "
+	text := "Auto Proxy - "
 	placeholder := "eg: 127.0.0.1:8080"
 	proxy := menuet.MenuItem{}
 
@@ -113,16 +127,7 @@ func proxyItem(items []menuet.MenuItem) menuet.MenuItem {
 			menuet.Defaults().SetString(destAddress, clicked.Inputs[0])
 		}
 
-		if server != nil {
-			_ = server.Shutdown(context.Background())
-			server = nil
-		}
-		if opening == "off" {
-			opening = "on"
-		} else {
-			opening = "off"
-			offAutoProxy()
-		}
+		serveing = startProxy()
 		if len(items) < 1 {
 			return
 		}
@@ -132,10 +137,7 @@ func proxyItem(items []menuet.MenuItem) menuet.MenuItem {
 	proxy.Text = text + "Stopped"
 	proxy.Clicked = clicked
 
-	if opening == "on" {
-		if !startProxy() {
-			return proxy
-		}
+	if serveing {
 		proxy.Text = text + "Running"
 		proxy.FontWeight = menuet.WeightBold
 		proxy.Clicked = func() {
@@ -180,10 +182,16 @@ func proxyItem(items []menuet.MenuItem) menuet.MenuItem {
 					Clicked:    refreshAutoProxy,
 				},
 				{
-					Text:       "Off system auto proxy",
+					Text:       "Proxy status: " + cases.Title(language.English).String(opening),
 					FontSize:   12,
 					FontWeight: menuet.WeightBold,
-					Clicked:    offAutoProxy,
+					Clicked: func() {
+						if opening == "on" {
+							offAutoProxy()
+						} else {
+							openProxy()
+						}
+					},
 				},
 				{Type: menuet.Separator},
 			}
@@ -245,7 +253,20 @@ func proxyItem(items []menuet.MenuItem) menuet.MenuItem {
 					menuet.Defaults().SetString(proxyAddress, content)
 				}},
 				menuet.MenuItem{Type: menuet.Separator},
-				menuet.MenuItem{Text: "Stop", Clicked: clicked},
+				menuet.MenuItem{
+					Text:       "Stop",
+					FontWeight: menuet.WeightBold,
+					Clicked: func() {
+						if server == nil {
+							return
+						}
+
+						_ = server.Shutdown(context.Background())
+						server = nil
+						serveing = false
+						offAutoProxy()
+					},
+				},
 			)
 			return subItems
 		}

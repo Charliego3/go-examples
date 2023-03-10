@@ -18,7 +18,7 @@ type NSTableView struct {
 
 func NewNSTableView(frame core.NSRect) NSTableView {
 	tableView := NSTableView{
-		NSView: cocoa.NSView{Object: nsTableView.Alloc().Send("initWithFrame:", frame)},
+		NSView: cocoa.NSView{},
 		coder:  NewNSCoder(),
 	}
 	dataSource := NewNSTableViewDataSource()
@@ -33,7 +33,7 @@ func NewNSTableView(frame core.NSRect) NSTableView {
 func NewNSTableViewWithCoder() NSTableView {
 	coder := NewNSCoder()
 	return NSTableView{
-		NSView: cocoa.NSView{Object: nsTableView.Alloc().Send("initWithCoder:", coder)},
+		NSView: cocoa.NSView{},
 		coder:  coder,
 	}
 }
