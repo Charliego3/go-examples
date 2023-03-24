@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/caseymrm/menuet"
 )
 
@@ -25,7 +27,8 @@ func menuItems() []menuet.MenuItem {
 	return items
 }
 
-func notify(title, msg string) {
+func notify(title, msg string, args ...any) {
+	msg = fmt.Sprintf(msg, args...)
 	menuet.App().Alert(menuet.Alert{
 		MessageText:     title,
 		InformativeText: msg,
@@ -33,6 +36,6 @@ func notify(title, msg string) {
 	})
 }
 
-func warning(msg string) {
-	notify("Oops!", msg)
+func warning(msg string, args ...any) {
+	notify("Oops!", msg, args...)
 }
