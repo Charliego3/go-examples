@@ -1,10 +1,11 @@
 package autoapi
 
 import (
-	"github.com/shopspring/decimal"
-	"github.com/whimthen/temp/logger"
 	"net"
 	"testing"
+
+	"github.com/charmbracelet/log"
+	"github.com/shopspring/decimal"
 )
 
 func init() {
@@ -29,6 +30,6 @@ func TestName(t *testing.T) {
 		panic(err)
 	}
 
-	logger.Info(listener.Addr().String())
+	log.Info(listener.Addr().String())
 
 }

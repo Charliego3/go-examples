@@ -2,20 +2,21 @@ package autoapi
 
 import (
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	"github.com/whimthen/temp/logger"
-	"gopkg.in/yaml.v3"
 	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/charmbracelet/log"
+	"github.com/go-resty/resty/v2"
+	"gopkg.in/yaml.v3"
 )
 
 var (
 	DefaultAccount *Account
-	client         = resty.New().SetTimeout(time.Minute).SetLogger(logger.StandardLogger())
+	client         = resty.New().SetTimeout(time.Minute).SetLogger(log.Default())
 	//.SetProxy("http://172.16.100.150:23128")
 )
 
@@ -64,17 +65,17 @@ func request[T any](endpoint string, opts ...Option[*Values]) T {
 	}
 
 	request := p.URL + endpoint + "?" + params.String()
-	logger.Debugf("Request: %s", request)
+	// log.Debugf("Req uest: %s", request)
 	resp, err := client.R().SetResult(t).Get(request)
 	var cancel bool
 	if err != nil {
-		logger.Errorf("Request: %s\n\terror: %+v", request, err)
+		log.Errorf("Request: %s\n\terror: %+v", request, err)
 		cancel = true
 	} else if resp.StatusCode() != 200 {
-		logger.Infof("Request: %s\n\t Status: %s, Body: %s", request, resp.Status(), resp.Body())
+		log.Infof("Request: %s\n\t Status: %s, Body: %s", request, resp.Status(), resp.Body())
 		cancel = true
 	} else if !strings.HasPrefix(resp.Header().Get("Content-Type"), "application/json") {
-		logger.Errorf("响应非JSON格式, Request: %s, Response: %s", request, resp.Body())
+		log.Errorf("响应非JSON格式, Request: %s, Response: %s", request, resp.Body())
 		cancel = true
 	}
 	if cancel && !p.continueErr {

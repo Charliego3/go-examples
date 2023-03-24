@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/url"
 
+	"github.com/charmbracelet/log"
 	"github.com/shopspring/decimal"
-	"github.com/whimthen/temp/logger"
 )
 
 type Option[T any] func(T)
@@ -19,14 +19,14 @@ type Values struct {
 }
 
 func WithObj(key string, obj any) Option[*Values] {
-    return func(t *Values)  {
-        buf, err := json.Marshal(obj)
-        if err != nil {
-            logger.Errorf("Settings the obj[%s] value error: %s", key, err)
-            return
-        }
-        t.Set(key, string(buf))
-    }
+	return func(t *Values) {
+		buf, err := json.Marshal(obj)
+		if err != nil {
+			log.Errorf("Settings the obj[%s] value error: %s", key, err)
+			return
+		}
+		t.Set(key, string(buf))
+	}
 }
 
 func WithMarket(market string) Option[*Values] {

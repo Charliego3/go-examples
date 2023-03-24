@@ -39,6 +39,11 @@ func Order(market string, price, amount decimal.Decimal, tradeType TradeType, op
 	return request[OrderResp]("api/order", opts...)
 }
 
+func QueueOrder(market string, price, amount decimal.Decimal, tradeType TradeType, opts ...Option[*Values]) OrderResp {
+	opts = append(opts, WithCurrencyMarket(market), WithAmount(amount), WithPrice(price), WithTradeType(tradeType), WithTrade())
+	return request[OrderResp]("api/queueOrder", opts...)
+}
+
 func BatchOrder(market string, tradeType TradeType, tradeParams [][]decimal.Decimal, opts ...Option[*Values]) {
 	opts = append(opts, WithMarket(market), WithTradeType(tradeType), WithObj("tradeParams", tradeParams), WithTrade())
 	resp := request[any]("api/orderMoreV2", opts...)
@@ -46,8 +51,8 @@ func BatchOrder(market string, tradeType TradeType, tradeParams [][]decimal.Deci
 }
 
 func CancelAllOrders(market string, opts ...Option[*Values]) any {
-    opts = append(opts, WithCurrencyMarket(market), WithTrade())
-    return request[any]("api/cancelAllOpenedOrders", opts...)
+	opts = append(opts, WithCurrencyMarket(market), WithTrade())
+	return request[any]("api/cancelAllOpenedOrders", opts...)
 }
 
 // Trade ended ==============================

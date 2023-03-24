@@ -21,6 +21,7 @@ func menuItems() []menuet.MenuItem {
 	items = append(items, proxyItem(items))
 	items = append(items, generatePassword())
 	items = append(items, openProject())
+	items = append(items, openTerminal())
 	return items
 }
 
