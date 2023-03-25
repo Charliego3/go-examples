@@ -24,3 +24,8 @@ func TestTerminal(t *testing.T) {
 		fmt.Println("Error: ", err)
 	}
 }
+
+func TestGofile(t *testing.T) {
+	// os.Chdir("~/Downloads/")
+	exec.Command("cd", "~/Downloads/", "&&", "go-file").Start()
+}
