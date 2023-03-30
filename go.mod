@@ -56,8 +56,8 @@ require (
 
 require (
 	github.com/alibaba/ioc-golang v1.0.0
-	github.com/charliego93/websocket v1.0.2
-	github.com/charmbracelet/log v0.2.1-0.20230321190858-023bb73dc20f
+	github.com/charliego93/websocket v1.0.3
+	github.com/charmbracelet/log v0.2.1
 	github.com/dubbogo/gost v1.11.25
 	github.com/gin-gonic/gin v1.8.1
 	github.com/gookit/goutil v0.6.2
@@ -163,7 +163,7 @@ require (
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
-	github.com/mattn/go-isatty v0.0.17 // indirect
+	github.com/mattn/go-isatty v0.0.18 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
