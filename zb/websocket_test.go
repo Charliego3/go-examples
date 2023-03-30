@@ -2,10 +2,14 @@ package zb
 
 import (
 	"context"
-	"github.com/whimthen/temp/logger"
-	"github.com/whimthen/temp/websocket"
+	"fmt"
 	"io"
+	"os"
+	"sync"
 	"testing"
+
+	"github.com/charliego93/websocket"
+	logger "github.com/charmbracelet/log"
 )
 
 type LoggedProcessor struct {
@@ -24,6 +28,26 @@ func (p *LoggedProcessor) OnReceive(frame *websocket.Frame) {
 
 func (p *LoggedProcessor) SetLogger(l *logger.Logger) {
 	p.logger = l
+}
+
+func TestLogger(t *testing.T) {
+	log := logger.NewWithOptions(os.Stdout, logger.Options{
+		ReportTimestamp: true,
+		// ReportCaller:    true,
+		TimeFormat: "3:04:05PM",
+		Prefix:     "Baking 👀",
+	})
+
+	var group sync.WaitGroup
+	group.Add(100)
+	go func(log *logger.Logger) {
+		for i := 0; i < 100; i++ {
+			log.Info(fmt.Sprintf("%d/100...", i+1))
+			group.Done()
+		}
+	}(log)
+
+	group.Wait()
 }
 
 func TestKLineWebsocket(t *testing.T) {
