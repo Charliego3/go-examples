@@ -4,102 +4,99 @@ import (
 	"fmt"
 	"github.com/kataras/golog"
 	"github.com/progrium/macdriver/cocoa"
-	"github.com/progrium/macdriver/core"
 	"github.com/progrium/macdriver/objc"
-	"github.com/whimthen/temp/macdriver-gui/widgets"
 	"github.com/whimthen/temp/macdriver-gui/widgets/alert"
-	"runtime"
 	"time"
 )
 
 func main() {
 	golog.SetLevel("debug")
 
-	runtime.LockOSThread()
+	//runtime.LockOSThread()
 	app := cocoa.NSApp_WithDidLaunch(func(notification objc.Object) {
 		initStatusMenuBar()
 
-		tableView := NewNSTableView(core.Rect(0, 0, 100, 200))
-		//tableView.Send("draw:", nil)
-		_ = tableView
-
-		wRect := core.Rect(0, 0, 600, 665)
-		w := cocoa.NSWindow_Init(
-			wRect,
-			cocoa.NSClosableWindowMask|
-				cocoa.NSResizableWindowMask|
-				cocoa.NSMiniaturizableWindowMask|
-				//cocoa.NSTexturedBackgroundWindowMask|
-				cocoa.NSFullSizeContentViewWindowMask|
-				cocoa.NSTitledWindowMask,
-			cocoa.NSBackingStoreRetained,
-			false,
-		)
-
-		tfRect := core.Rect(10, 200, 200, 21)
-		textField := widgets.NewNSTextField(tfRect)
-		//textField.SetBackgroundColor(cocoa.Color(206, 85, 33, 1))
-		//textField.Set("bezelStyle:", objc.Get("NSTextFieldRoundedBezel"))
+		//tableView := NewNSTableView(core.Rect(0, 0, 100, 200))
+		////tableView.Send("draw:", nil)
+		//_ = tableView
+		//
+		//wRect := core.Rect(0, 0, 600, 665)
+		//w := cocoa.NSWindow_Init(
+		//	wRect,
+		//	cocoa.NSClosableWindowMask|
+		//		cocoa.NSResizableWindowMask|
+		//		cocoa.NSMiniaturizableWindowMask|
+		//		//cocoa.NSTexturedBackgroundWindowMask|
+		//		cocoa.NSFullSizeContentViewWindowMask|
+		//		cocoa.NSTitledWindowMask,
+		//	cocoa.NSBackingStoreRetained,
+		//	false,
+		//)
+		//
+		//tfRect := core.Rect(10, 200, 200, 21)
+		//textField := widgets.NewNSTextField(tfRect)
+		////textField.SetBackgroundColor(cocoa.Color(206, 85, 33, 1))
+		////textField.Set("bezelStyle:", objc.Get("NSTextFieldRoundedBezel"))
+		////textField.Set("drawsBackground:", true)
+		////textField.SetWantsLayer(true)
+		////textField.Layer().SetCornerRadius(5)
+		////textField.Layer().Set("borderWidth:", 2)
+		////textField.Layer().Set("masksToBounds:", true)
+		////inView := cocoa.NSView_Init(tfRect)
+		////inView.Set("")
+		////textField.Send("drawWithFrame:inView:", tfRect, nil)
+		//
+		//sfRect := core.Rect(10, 100, 200, 21)
+		//searchField := widgets.NewNSSearchField(sfRect)
+		//searchField.SetRecentSearches("abc", "ddd", "TextField")
+		//
+		//textField.SetStringValue("TextFieldTest")
+		//textField.SetBordered(true)
+		//textField.Set("placeholderString:", core.String("PlaceholderString"))
 		//textField.Set("drawsBackground:", true)
-		//textField.SetWantsLayer(true)
-		//textField.Layer().SetCornerRadius(5)
-		//textField.Layer().Set("borderWidth:", 2)
-		//textField.Layer().Set("masksToBounds:", true)
-		//inView := cocoa.NSView_Init(tfRect)
-		//inView.Set("")
-		//textField.Send("drawWithFrame:inView:", tfRect, nil)
-
-		sfRect := core.Rect(10, 100, 200, 21)
-		searchField := widgets.NewNSSearchField(sfRect)
-		searchField.SetRecentSearches("abc", "ddd", "TextField")
-
-		textField.SetStringValue("TextFieldTest")
-		textField.SetBordered(true)
-		textField.Set("placeholderString:", core.String("PlaceholderString"))
-		textField.Set("drawsBackground:", true)
-
-		textView := cocoa.NSTextView_Init(core.Rect(0, 320, 300, 100))
-		textView.SetSelectable(true)
-		textView.SetString("test")
-
-		rect := core.Rect(0, 0, 600, 665)
-		view := cocoa.NSView_Init(rect)
-		view.SetWantsLayer(true)
-		view.Send("addSubview:", &tableView)
-		view.Send("addSubview:", &textView)
-		view.Send("addSubview:", &searchField)
-		view.Send("addSubview:", &textField)
-
-		//nsButton := button.NewButtonWithFrame(core.Rect(10, 50, 200, 25))
-		//nsButton.SetTitle("show alert")
-		//nsButton.SetAction(func(object button.NSButton) {
-		//	golog.Error("show alert is action")
-		//	ShowAlert(w)
-		//})
-		//nsButton.SetBorderType(button.BezelStyleRounded)
-		//view.Send("addSubview:", &nsButton)
+		//
+		//textView := cocoa.NSTextView_Init(core.Rect(0, 320, 300, 100))
+		//textView.SetSelectable(true)
+		//textView.SetString("test")
+		//
+		//rect := core.Rect(0, 0, 600, 665)
+		//view := cocoa.NSView_Init(rect)
 		//view.SetWantsLayer(true)
-		//view.Layer().SetCornerRadius(32.0)
-		//view.AddSubviewPositionedRelativeTo(textField, cocoa.NSWindowBelow, nil)
-		//view.AddSubviewPositionedRelativeTo(textView, cocoa.NSWindowBelow, nil)
-		//view.AddSubviewPositionedRelativeTo(tableView, cocoa.NSWindowAbove, nil)
-		//view.Send("draw:", &rect)
-		//view.AddSubviewPositionedRelativeTo(tableView, 1, w)
-
-		w.Send("setMinSize:", core.Size(300, 300))
-		w.Send("setContentMinSize:", core.Size(300, 300))
-		w.SetContentView(view)
-		w.SetTitleVisibility(cocoa.NSWindowTitleHidden)
-		w.SetTitlebarAppearsTransparent(true)
-		w.SetIgnoresMouseEvents(false)
-		w.SetMovableByWindowBackground(false)
-		//w.SetBackgroundColor(cocoa.NSColor_Init(46, 81, 133, 1))
-		//w.SetBackgroundColor(cocoa.NSColor_Clear())
-		w.SetLevel(0)
-		w.SetTitle("NSTableView")
-		w.MakeKeyAndOrderFront(view)
-		w.SetCollectionBehavior(cocoa.NSWindowCollectionBehaviorCanJoinAllSpaces)
-		w.Center()
+		//view.Send("addSubview:", &tableView)
+		//view.Send("addSubview:", &textView)
+		//view.Send("addSubview:", &searchField)
+		//view.Send("addSubview:", &textField)
+		//
+		////nsButton := button.NewButtonWithFrame(core.Rect(10, 50, 200, 25))
+		////nsButton.SetTitle("show alert")
+		////nsButton.SetAction(func(object button.NSButton) {
+		////	golog.Error("show alert is action")
+		////	ShowAlert(w)
+		////})
+		////nsButton.SetBorderType(button.BezelStyleRounded)
+		////view.Send("addSubview:", &nsButton)
+		////view.SetWantsLayer(true)
+		////view.Layer().SetCornerRadius(32.0)
+		////view.AddSubviewPositionedRelativeTo(textField, cocoa.NSWindowBelow, nil)
+		////view.AddSubviewPositionedRelativeTo(textView, cocoa.NSWindowBelow, nil)
+		////view.AddSubviewPositionedRelativeTo(tableView, cocoa.NSWindowAbove, nil)
+		////view.Send("draw:", &rect)
+		////view.AddSubviewPositionedRelativeTo(tableView, 1, w)
+		//
+		//w.Send("setMinSize:", core.Size(300, 300))
+		//w.Send("setContentMinSize:", core.Size(300, 300))
+		//w.SetContentView(view)
+		//w.SetTitleVisibility(cocoa.NSWindowTitleHidden)
+		//w.SetTitlebarAppearsTransparent(true)
+		//w.SetIgnoresMouseEvents(false)
+		//w.SetMovableByWindowBackground(false)
+		////w.SetBackgroundColor(cocoa.NSColor_Init(46, 81, 133, 1))
+		////w.SetBackgroundColor(cocoa.NSColor_Clear())
+		//w.SetLevel(0)
+		//w.SetTitle("NSTableView")
+		//w.MakeKeyAndOrderFront(view)
+		//w.SetCollectionBehavior(cocoa.NSWindowCollectionBehaviorCanJoinAllSpaces)
+		//w.Center()
 
 		//alert := widgets.NewNSAlert()
 		//alert.SetMessageText("Alert message")

@@ -504,3 +504,51 @@ func TestOrderMoreV2(t *testing.T) {
 		{decimal.NewFromFloat(1620), decimal.NewFromFloat(0.01)},
 	}, autoapi.WithAccount(account))
 }
+
+type TradeHistory struct {
+	logger *logger.Logger
+}
+
+func (t *TradeHistory) OnReceive(frame *websocket.Frame) {
+	if frame == nil || frame.Reader == nil {
+		t.logger.Error("websoclet received frame is nil...")
+		return
+	}
+	bs, err := io.ReadAll(frame.Reader)
+	if err != nil {
+		t.logger.Error("读取数据出错", err)
+		return
+	}
+	t.logger.Infof("收到成交数据: %s", bs)
+}
+
+func (t *TradeHistory) SetLogger(logger *logger.Logger) {
+	t.logger = logger
+}
+
+func TestTicker(t *testing.T) {
+	client := websocket.NewClient(
+		context.Background(),
+		"wss://api.bw6.com/websocket",
+		// "ws://ttapi2.100-130.net/websocket",
+		&TradeHistory{},
+		websocket.WithPing(websocket.NewStringMessage("ping")),
+	)
+
+	if err := client.Connect(); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := client.Subscribe(struct {
+		*websocket.JsonMessage
+		Event   string `json:"event"`
+		Channel string `json:"channel"`
+	}{
+		Event:   "addChannel",
+		Channel: "btcusdt_trades",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	<-make(chan struct{})
+}
