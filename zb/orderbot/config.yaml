@@ -1,0 +1,9 @@
+websockets:
+  - name: "BTC/USDT"
+    for: "wss://ws.okx.com:8443/ws/v5/public"
+    own: "ws://ttapi2.100-130.net/websocket"
+    api: "https://api.bw6.com/"
+    accessKey: "ad812851-d4f5-43d0-87d1-ec82a05c16bb"
+    secretKey: "10c7eb2b-f3cd-4bfd-99a7-a2b45054e915"
+    market: "BTC-USDT"
+    trade: "http://tttrade2.100-129.net/"
