@@ -49,6 +49,6 @@ func main() {
 	signal.Notify(stoper, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	<-stoper
 	cancel()
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 2)
 	log.Info("程序已停止")
 }

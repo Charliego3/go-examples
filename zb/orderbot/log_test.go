@@ -55,7 +55,7 @@ func (r *Runner) Run(ctx context.Context, opts log.Options, idx int) {
 	for {
 		select {
 		case t := <-ch:
-			logger.Debug("Receive", "index", idx, "msg", t)
+			logger.Debug("Receive", "idx", idx, "msg", t)
 		case <-ctx.Done():
 			logger.Info("Done")
 			return
@@ -88,7 +88,7 @@ func TestMultiple(t *testing.T) {
 
 	logger := log.NewWithOptions(os.Stdout, log.Options{
 		ReportTimestamp: true,
-		TimeFormat:      time.RFC822,
+		TimeFormat:      time.Kitchen,
 		Prefix:          "MAIN",
 	})
 	for i := 0; i < 2; i++ {

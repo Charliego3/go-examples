@@ -4,14 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	json "github.com/json-iterator/go"
-	"github.com/shopspring/decimal"
-	"github.com/spf13/cast"
-	"github.com/stretchr/objx"
-	"github.com/whimthen/temp/logger"
-	"github.com/whimthen/temp/websocket"
-	"github.com/whimthen/temp/zb/autoapi"
-	"gopkg.in/yaml.v3"
 	"io"
 	"math/rand"
 	"net/http"
@@ -21,6 +13,15 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/charliego93/websocket"
+	logger "github.com/charmbracelet/log"
+	json "github.com/json-iterator/go"
+	"github.com/shopspring/decimal"
+	"github.com/spf13/cast"
+	"github.com/stretchr/objx"
+	"github.com/whimthen/temp/zb/autoapi"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -171,7 +172,11 @@ type Websocket struct {
 
 func NewWebsocket(ctx context.Context, user User) *Websocket {
 	prefix := user.Name + "*" + config.WsapiURL
-	log := logger.NewLogger(logger.WithPrefix(prefix))
+	log := logger.NewWithOptions(os.Stdout, logger.Options{
+		Prefix:          prefix,
+		ReportTimestamp: true,
+		TimeFormat:      time.DateTime,
+	})
 	client := websocket.NewClient(
 		ctx, config.WsapiURL, &TradeProcessor{user: user},
 		websocket.WithPing(websocket.NewStringMessage("ping")),
@@ -196,7 +201,7 @@ func (w *Websocket) SubscribeRecord(markets ...string) *Websocket {
 
 	for _, market := range markets {
 		market := market
-		w.err = w.Client.SendMessage((&websocket.RequestMsg{
+		w.err = w.Client.Subscribe((&RequestMsg{
 			Event:     EventAddChannel,
 			Channel:   ChannelIncrRecord,
 			AccessKey: w.user.AccessKey,
@@ -220,7 +225,6 @@ var (
 )
 
 func init() {
-	logger.SetFormatter(&logger.Formatter{})
 	buf, err := os.ReadFile("config.yml")
 	if err != nil {
 		panic(err)
@@ -265,7 +269,7 @@ func listenQuickDepth(ctx context.Context) {
 			clients[websocketURL] = client
 		}
 
-		err := client.SendMessage(&websocket.RequestMsg{
+		err := client.Subscribe(&RequestMsg{
 			Event:   EventAddChannel,
 			Channel: market + "_quick_depth",
 		})
@@ -312,7 +316,11 @@ func TestAutoTrade(t *testing.T) {
 }
 
 func makeOrder(ctx context.Context, user User, market string) {
-	log := logger.NewLogger(logger.WithPrefix("ORDER:%s:%s", strings.ToUpper(market), user.Name))
+	log := logger.NewWithOptions(os.Stdout, logger.Options{
+		Prefix:          fmt.Sprintf("ORDER:%s:%s", strings.ToUpper(market), user.Name),
+		ReportTimestamp: true,
+		TimeFormat:      time.DateTime,
+	})
 	ticker := time.NewTicker(config.Interval)
 	for {
 		select {
@@ -469,12 +477,12 @@ func TestOrder(t *testing.T) {
 }
 
 func TestCancelAllOrders(t *testing.T) {
-    for idx := range config.Users {
-        account := getAccount(idx)
-        ethusdt := autoapi.CancelAllOrders("ethusdt", autoapi.WithAccount(account))
-        btcusdt := autoapi.CancelAllOrders("btcusdt", autoapi.WithAccount(account))
-        logger.Infof("ETHUSDT: %+v, BTCUSDT: %+v", ethusdt, btcusdt)
-    }
+	for idx := range config.Users {
+		account := getAccount(idx)
+		ethusdt := autoapi.CancelAllOrders("ethusdt", autoapi.WithAccount(account))
+		btcusdt := autoapi.CancelAllOrders("btcusdt", autoapi.WithAccount(account))
+		logger.Infof("ETHUSDT: %+v, BTCUSDT: %+v", ethusdt, btcusdt)
+	}
 }
 
 func getAccount(idx int) *autoapi.Account {
@@ -495,4 +503,52 @@ func TestOrderMoreV2(t *testing.T) {
 		{decimal.NewFromFloat(1630), decimal.NewFromFloat(0.01)},
 		{decimal.NewFromFloat(1620), decimal.NewFromFloat(0.01)},
 	}, autoapi.WithAccount(account))
+}
+
+type TradeHistory struct {
+	logger *logger.Logger
+}
+
+func (t *TradeHistory) OnReceive(frame *websocket.Frame) {
+	if frame == nil || frame.Reader == nil {
+		t.logger.Error("websoclet received frame is nil...")
+		return
+	}
+	bs, err := io.ReadAll(frame.Reader)
+	if err != nil {
+		t.logger.Error("读取数据出错", err)
+		return
+	}
+	t.logger.Infof("收到成交数据: %s", bs)
+}
+
+func (t *TradeHistory) SetLogger(logger *logger.Logger) {
+	t.logger = logger
+}
+
+func TestTicker(t *testing.T) {
+	client := websocket.NewClient(
+		context.Background(),
+		"wss://api.bw6.com/websocket",
+		// "ws://ttapi2.100-130.net/websocket",
+		&TradeHistory{},
+		websocket.WithPing(websocket.NewStringMessage("ping")),
+	)
+
+	if err := client.Connect(); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := client.Subscribe(struct {
+		*websocket.JsonMessage
+		Event   string `json:"event"`
+		Channel string `json:"channel"`
+	}{
+		Event:   "addChannel",
+		Channel: "btcusdt_trades",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	<-make(chan struct{})
 }
